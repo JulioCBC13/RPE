@@ -7,7 +7,7 @@ export function AlertTypeChip({ type }: { type: AlertType }) {
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide",
-        isRed ? "bg-danger/10 text-danger" : "bg-warning/15 text-warning-foreground",
+        isRed ? "bg-danger/10 text-danger" : "bg-warning/15 text-warning",
       )}
     >
       {isRed ? "ESTANCAMIENTO" : "RUTINA INCOMPLETA"}
@@ -41,7 +41,7 @@ export function CompletionBadge({ status }: { status: SessionStatus }) {
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
-        complete ? "bg-success/10 text-success" : "bg-warning/15 text-warning-foreground",
+        complete ? "bg-success/10 text-success" : "bg-warning/15 text-warning",
       )}
     >
       {complete ? "Completa" : "Incompleta"}

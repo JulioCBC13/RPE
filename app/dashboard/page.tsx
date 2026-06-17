@@ -24,13 +24,26 @@ export default function DashboardPage() {
     <AppShell title="Dashboard">
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Atletas activos" value={stats.activeAthletes} variant="success" icon={Users} />
+          <StatCard
+            label="Atletas activos"
+            value={stats.activeAthletes}
+            variant="success"
+            icon={Users}
+            percent={78}
+            delta="+3"
+            deltaDirection="up"
+            deltaNote="este mes"
+          />
           <StatCard
             label="Alertas rojas"
             value={stats.redAlerts}
             variant="danger"
             icon={AlertTriangle}
             highlightWhenPositive
+            percent={40}
+            delta="+1"
+            deltaDirection="down"
+            deltaNote="esta semana"
           />
           <StatCard
             label="Accesos expirados"
@@ -38,6 +51,10 @@ export default function DashboardPage() {
             variant="warning"
             icon={CalendarX}
             highlightWhenPositive
+            percent={25}
+            delta="2"
+            deltaDirection="down"
+            deltaNote="por renovar"
           />
         </div>
 
