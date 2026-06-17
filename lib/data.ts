@@ -24,6 +24,34 @@ export type CoachAlert = {
   reviewed: boolean
 }
 
+export type PaymentMethod = "Zelle" | "Pago Móvil" | "Binance" | "Transferencia"
+
+export type PendingPayment = {
+  id: string
+  athleteId: string
+  athleteName: string
+  method: PaymentMethod
+  reportedAt: string // ISO date
+}
+
+export type BlockUpdate = {
+  id: string
+  athleteId: string
+  athleteName: string
+  blockName: string
+  currentWeek: number
+  totalWeeks: number
+  daysLeft: number
+}
+
+export type PendingVideo = {
+  id: string
+  athleteId: string
+  athleteName: string
+  exercise: string
+  submittedAt: string
+}
+
 export type ProgressionAdjustment = {
   id: string
   athleteId: string
@@ -163,6 +191,28 @@ export const coachAlerts: CoachAlert[] = [
   },
 ]
 
+export const pendingPayments: PendingPayment[] = [
+  { id: "pp1", athleteId: "a4", athleteName: "Andrés Castro",   method: "Pago Móvil",    reportedAt: "2026-06-16T11:50:00Z" },
+  { id: "pp2", athleteId: "a7", athleteName: "Camila Vega",     method: "Binance",       reportedAt: "2026-06-16T11:20:00Z" },
+  { id: "pp3", athleteId: "a3", athleteName: "Martina Soto",    method: "Zelle",         reportedAt: "2026-06-16T10:05:00Z" },
+  { id: "pp4", athleteId: "a6", athleteName: "Tomás Herrera",   method: "Transferencia", reportedAt: "2026-06-16T09:30:00Z" },
+]
+
+export const blockUpdates: BlockUpdate[] = [
+  { id: "bu1", athleteId: "a2", athleteName: "Diego Ramírez",   blockName: "Peaking de fuerza",      currentWeek: 4, totalWeeks: 4, daysLeft: 2  },
+  { id: "bu2", athleteId: "a1", athleteName: "Lucía Fernández", blockName: "Bloque de acumulación",  currentWeek: 4, totalWeeks: 5, daysLeft: 4  },
+  { id: "bu3", athleteId: "a5", athleteName: "Valentina Ríos",  blockName: "Full Body - Fase 1",     currentWeek: 3, totalWeeks: 4, daysLeft: 7  },
+  { id: "bu4", athleteId: "a6", athleteName: "Tomás Herrera",   blockName: "Acondicionamiento",      currentWeek: 2, totalWeeks: 4, daysLeft: 12 },
+]
+
+export const pendingVideos: PendingVideo[] = [
+  { id: "pv1", athleteId: "a1", athleteName: "Lucía Fernández", exercise: "Sentadilla baja barra",    submittedAt: "2026-06-16T10:00:00Z" },
+  { id: "pv2", athleteId: "a5", athleteName: "Valentina Ríos",  exercise: "Peso muerto convencional", submittedAt: "2026-06-16T09:30:00Z" },
+  { id: "pv3", athleteId: "a2", athleteName: "Diego Ramírez",   exercise: "Press banca",              submittedAt: "2026-06-15T18:00:00Z" },
+  { id: "pv4", athleteId: "a3", athleteName: "Martina Soto",    exercise: "Sentadilla frontal",       submittedAt: "2026-06-15T15:45:00Z" },
+  { id: "pv5", athleteId: "a6", athleteName: "Tomás Herrera",   exercise: "Remo pendlay",             submittedAt: "2026-06-15T14:00:00Z" },
+]
+
 export const progressionAdjustments: ProgressionAdjustment[] = [
   {
     id: "pa1",
@@ -223,8 +273,11 @@ export function getSessionsForAthlete(id: string): TrainingSession[] {
 
 export const stats = {
   activeAthletes: athletes.filter((a) => a.status === "activo").length,
+  trainingToday: 42,
+  totalCapacity: 100,
   redAlerts: coachAlerts.filter((a) => a.type === "ESTANCAMIENTO").length,
   expiredAccess: athletes.filter((a) => a.status === "expirado").length,
+  pendingVideosCount: 5,
 }
 
 // Relative-time formatter in Spanish (e.g. "Hace 2 días").
