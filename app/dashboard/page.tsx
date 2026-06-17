@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
 import {
   Users,
   Video,
@@ -10,7 +9,6 @@ import {
   CheckCircle,
   Zap,
   ArrowRight,
-  Clock,
 } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { Button } from "@/components/ui/button"
@@ -24,11 +22,9 @@ import {
   stats,
   coachAlerts,
   blockUpdates,
-  pendingPayments,
   pendingVideos,
   timeAgo,
   initialsOf,
-  type PendingPayment,
 } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
@@ -117,53 +113,10 @@ function BlockUpdateCard({ block }: { block: typeof blockUpdates[0] }) {
   )
 }
 
-// --- Pago reportado ---
-const methodColors: Record<string, string> = {
-  "Zelle":         "bg-primary/10 text-primary",
-  "Pago Móvil":    "bg-success/10 text-success",
-  "Binance":       "bg-warning/10 text-warning",
-  "Transferencia": "bg-muted text-muted-foreground",
-}
-
-function PaymentRow({ payment, onEnable }: { payment: PendingPayment; onEnable: (id: string) => void }) {
-  return (
-    <div className="flex items-center gap-3 py-3">
-      <Avatar className="size-8 shrink-0">
-        <AvatarFallback className="text-[11px] bg-muted text-muted-foreground">
-          {initialsOf(payment.athleteName)}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-        <span className="text-sm font-medium text-card-foreground truncate">{payment.athleteName}</span>
-        <div className="flex items-center gap-1.5">
-          <Badge className={cn("text-[10px] border-0", methodColors[payment.method])}>
-            {payment.method}
-          </Badge>
-          <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
-            <Clock className="size-3" />
-            {timeAgo(payment.reportedAt)}
-          </span>
-        </div>
-      </div>
-      <Button
-        size="sm"
-        className="shrink-0 bg-success/90 text-success-foreground hover:bg-success"
-        onClick={() => onEnable(payment.id)}
-        nativeButton={false}
-        render={<Link href={`/atletas/${payment.athleteId}/habilitar`} />}
-      >
-        <CheckCircle className="size-3.5" data-icon="inline-start" />
-        Habilitar
-      </Button>
-    </div>
-  )
-}
-
 // --- Dashboard Page ---
 export default function DashboardPage() {
   const criticalAlerts = coachAlerts.filter((a) => !a.reviewed)
   const sortedBlocks = [...blockUpdates].sort((a, b) => a.daysLeft - b.daysLeft)
-  const [payments, setPayments] = useState(pendingPayments)
 
   const trainingPercent = Math.round((stats.trainingToday / stats.totalCapacity) * 100)
 
@@ -171,10 +124,10 @@ export default function DashboardPage() {
     <AppShell title="Centro de Mando Operativo">
       <div className="flex flex-col gap-6">
 
-        {/* Main 2-column area */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
+        {/* Main area */}
+        <div className="grid grid-cols-1 gap-5">
 
-          {/* LEFT: Tabs Alertas / Bloques */}
+          {/* Tabs Alertas / Bloques */}
           <Card className="flex flex-col">
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between">
@@ -236,44 +189,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* RIGHT: Validación de Accesos */}
-          <Card className="flex flex-col">
-            <CardHeader className="pb-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">Validación de Accesos</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Pagos reportados esperando habilitación
-                  </CardDescription>
-                </div>
-                {payments.length > 0 && (
-                  <Badge className="bg-success/15 text-success border-0 text-xs">
-                    {payments.length} en cola
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-2">
-              {payments.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-10 text-center">
-                  <CheckCircle className="size-8 text-success" />
-                  <p className="text-sm font-medium text-card-foreground">Todo al día</p>
-                  <p className="text-xs text-muted-foreground">No hay pagos pendientes.</p>
-                </div>
-              ) : (
-                <div className="flex flex-col divide-y divide-border">
-                  {payments.map((p) => (
-                    <PaymentRow
-                      key={p.id}
-                      payment={p}
-                      onEnable={(id) => setPayments((prev) => prev.filter((x) => x.id !== id))}
-                    />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* BOTTOM: Metrics row */}

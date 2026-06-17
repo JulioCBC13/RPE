@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGrid, Bell, Users, Zap, LogOut, UserPlus } from "lucide-react"
+import { LayoutGrid, Bell, Users, Zap, LogOut, CreditCard } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { coach, coachAlerts } from "@/lib/data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -19,7 +19,12 @@ const navSections = [
     title: "Gestión",
     items: [
       { href: "/atletas", label: "Atletas", icon: Users },
-      { href: "/atletas/nuevo", label: "Registrar atleta", icon: UserPlus },
+    ],
+  },
+  {
+    title: "Payments",
+    items: [
+      { href: "/payments", label: "Validación de Pagos", icon: CreditCard },
     ],
   },
 ]
@@ -46,7 +51,7 @@ export function Sidebar() {
             {section.items.map((item) => {
               const active =
                 pathname === item.href ||
-                (item.href !== "/atletas/nuevo" && pathname.startsWith(item.href + "/"))
+                pathname.startsWith(item.href + "/")
               const showBadge = item.href === "/alertas" && alertCount > 0
               return (
                 <Link
