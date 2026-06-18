@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -69,28 +70,21 @@ export default function AtletasPage() {
           </TableHeader>
           <TableBody>
             {list.map((a) => (
-              <TableRow
-                key={a.id}
-                className={cn(
-                  "cursor-pointer transition-colors",
-                  selectedId === a.id && "bg-primary/10",
-                )}
-                onClick={() => setSelectedId(a.id === selectedId ? null : a.id)}
-              >
-                <td className="px-4 py-3">
-                  <div className="flex flex-col gap-0.5">
+              <TableRow key={a.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <TableCell asChild>
+                  <Link href={`/atletas/${a.id}`} className="flex flex-col gap-0.5 py-3 px-4">
                     <span className="text-sm font-medium text-card-foreground">{a.name}</span>
                     <span className="text-xs text-muted-foreground">{a.email}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
+                  </Link>
+                </TableCell>
+                <TableCell>
                   {a.block ? (
                     <span className="text-xs font-medium text-success">{a.block.name}</span>
                   ) : (
                     <span className="text-xs text-muted-foreground/50 italic">Sin bloque</span>
                   )}
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell>
                   <Badge
                     className={cn(
                       "border-0 text-[11px]",
@@ -107,7 +101,7 @@ export default function AtletasPage() {
                         ? "Expirado"
                         : "Sin acceso"}
                   </Badge>
-                </td>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
