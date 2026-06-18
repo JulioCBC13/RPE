@@ -62,8 +62,7 @@ export default function AtletasPage() {
   return (
     <AppShell title="Atletas">
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl font-bold text-primary">Atletas</h1>
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 flex-1 max-w-xs">
             <Search className="size-4 text-muted-foreground" />
             <Input
