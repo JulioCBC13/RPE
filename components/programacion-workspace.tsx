@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -10,8 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { athletes } from "@/lib/data"
-import { CalendarCheck, ChevronLeft, ChevronRight, Lock, Unlock } from "lucide-react"
+import { athletes as staticAthletes } from "@/lib/data"
+import { useAppStore } from "@/lib/store"
+import { CalendarCheck, ChevronLeft, ChevronRight, Lock, Unlock, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ---------- Types ----------
@@ -207,7 +209,17 @@ function Cell({
 
 // ---------- Main Component ----------
 export function ProgramacionWorkspace() {
-  const [athleteId, setAthleteId] = useState(athletes[0].id)
+  const { athletes: storeAthletes } = useAppStore()
+
+  // Merge store athletes (may have newly assigned blocks) with static list
+  const athletes = [
+    ...storeAthletes,
+    ...staticAthletes
+      .filter((a) => !storeAthletes.find((s) => s.id === a.id))
+      .map((a) => ({ id: a.id, name: a.name, email: a.email, status: a.status as "activo" | "expirado" | "sin_acceso", block: null as null | { name: string; weeks: number; createdAt: string } })),
+  ]
+
+  const [athleteId, setAthleteId] = useState(athletes[0]?.id ?? "")
   const [blockIdx, setBlockIdx] = useState(0)
   const [weekNum, setWeekNum] = useState(1)
   const [locked, setLocked] = useState(true)
@@ -216,6 +228,10 @@ export function ProgramacionWorkspace() {
   const tableRef = useRef<HTMLTableElement>(null)
 
   const athlete = athletes.find((a) => a.id === athleteId)
+  // Store athletes (s1/s2/s3) only show the table if they have a block assigned.
+  // Static athletes (a1–a4) always show the table (they have MOCK_BLOCKS data).
+  const isStoreAthlete = athleteId.startsWith("s")
+  const athleteHasStoreBlock = !isStoreAthlete || !!athlete?.block
   const block = blocks[blockIdx]
   const weekData = block.weeks.find((w) => w.week === weekNum)!
   const prevWeekData = block.weeks.find((w) => w.week === weekNum - 1)
@@ -320,15 +336,18 @@ export function ProgramacionWorkspace() {
             <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Atleta
             </span>
-            <Select value={athleteId} onValueChange={setAthleteId}>
+            <Select value={athleteId} onValueChange={(v) => { setAthleteId(v); setBlockIdx(0); setWeekNum(1) }}>
               <SelectTrigger className="h-8 w-52 text-xs">
-                <SelectValue>{() => athlete?.name}</SelectValue>
+                <SelectValue>{() => athlete?.name ?? "Seleccionar atleta"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   {athletes.map((a) => (
                     <SelectItem key={a.id} value={a.id} className="text-xs">
-                      {a.name}
+                      <span>{a.name}</span>
+                      {a.block && (
+                        <span className="ml-1.5 text-[10px] text-success">— {a.block.name}</span>
+                      )}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -384,8 +403,31 @@ export function ProgramacionWorkspace() {
           </div>
         </div>
 
-        {/* Week selector */}
-        <div className="flex gap-1">
+        {/* ── Empty state: athlete without block ── */}
+        {!athleteHasStoreBlock && (
+          <div className="flex flex-col items-center gap-4 py-8 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+              <AlertCircle className="size-7 text-muted-foreground" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-card-foreground">
+                Este atleta no tiene un bloque activo
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Ve a &quot;Crear Bloque&quot; para asignarle uno y comenzar a programar sus semanas.
+              </p>
+            </div>
+            <Link
+              href="/programacion/crear"
+              className="inline-flex h-9 items-center gap-2 rounded bg-primary px-4 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Ir a Crear Bloque
+            </Link>
+          </div>
+        )}
+
+      {/* Week selector */}
+        <div className={cn("flex gap-1", !athleteHasStoreBlock && "hidden")}>
           {block.weeks.map((w) => {
             const active = w.week === weekNum
             const hasData = w.rows.some((r) => r.prepLoad !== "")
@@ -424,7 +466,7 @@ export function ProgramacionWorkspace() {
       </div>
 
       {/* ── Grid ── */}
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+      <div className={cn("overflow-x-auto rounded-lg border border-border bg-card", !athleteHasStoreBlock && "hidden")}>
         <table ref={tableRef} className="w-full min-w-[860px] border-collapse text-xs">
           <thead>
             <tr className="border-b border-border bg-muted/60">
@@ -541,10 +583,12 @@ export function ProgramacionWorkspace() {
         </table>
       </div>
 
-      <p className="text-[10px] text-muted-foreground/50">
-        Navega con <kbd className="rounded border border-border bg-muted px-1">Tab</kbd> · <kbd className="rounded border border-border bg-muted px-1">↑↓←→</kbd> entre celdas de la fase Preparante.
-        Activa &quot;Editando&quot; para desbloquear la cuadrícula.
-      </p>
+      {athleteHasStoreBlock && (
+        <p className="text-[10px] text-muted-foreground/50">
+          Navega con <kbd className="rounded border border-border bg-muted px-1">Tab</kbd> · <kbd className="rounded border border-border bg-muted px-1">↑↓←→</kbd> entre celdas de la fase Preparante.
+          Activa &quot;Editando&quot; para desbloquear la cuadrícula.
+        </p>
+      )}
     </div>
   )
 }

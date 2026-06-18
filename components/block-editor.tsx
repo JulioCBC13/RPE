@@ -1,9 +1,11 @@
 "use client"
 
-import { useRef, useCallback, useState, useId } from "react"
-import { Trash2, Copy, Plus, Zap } from "lucide-react"
+import { useRef, useCallback, useState, useId, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Trash2, Copy, Plus, Zap, UserCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ExerciseCombobox } from "@/components/exercise-combobox"
+import { useAppStore } from "@/lib/store"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,9 +97,21 @@ function ClassificationToggle({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function BlockEditor() {
+  const { athletes, pendingAthleteId, setPendingAthleteId, assignBlock } = useAppStore()
+  const router = useRouter()
+
   const [blockName, setBlockName] = useState("")
   const [weeks, setWeeks] = useState("4")
+  const [selectedAthleteId, setSelectedAthleteId] = useState<string>("")
   const [days, setDays] = useState<Day[]>([mkDay(1), mkDay(2), mkDay(3)])
+
+  // Pre-select athlete if coming from the Atletas page
+  useEffect(() => {
+    if (pendingAthleteId) {
+      setSelectedAthleteId(pendingAthleteId)
+      setPendingAthleteId(null)
+    }
+  }, [pendingAthleteId, setPendingAthleteId])
 
   // Map of cellId → DOM input element for focus management
   const cellRefs = useRef<Record<string, HTMLInputElement | HTMLButtonElement | null>>({})
@@ -211,12 +225,29 @@ export function BlockEditor() {
       }
     }
 
-  // ────────────────────────────────────────────���────────────────────────────
+  // ─────��──────────────────────────────────────���────────────────────────────
 
   return (
     <div className="flex flex-col gap-0 min-h-full">
       {/* ── Top Bar ─────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background px-4 py-2.5">
+        {/* Athlete selector */}
+        <div className="flex items-center gap-1.5">
+          <UserCircle2 className="size-4 shrink-0 text-muted-foreground" />
+          <select
+            value={selectedAthleteId}
+            onChange={(e) => setSelectedAthleteId(e.target.value)}
+            className="h-8 rounded border border-border bg-card px-2 text-sm text-card-foreground focus:border-primary focus:outline-none"
+          >
+            <option value="">— Atleta —</option>
+            {athletes.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="h-5 w-px bg-border" />
+
         <input
           type="text"
           placeholder="Nombre del Bloque — ej: Off Season B2"
@@ -235,7 +266,17 @@ export function BlockEditor() {
         </select>
         <button
           type="button"
-          className="flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90"
+          disabled={!selectedAthleteId || !blockName.trim()}
+          onClick={() => {
+            if (!selectedAthleteId || !blockName.trim()) return
+            assignBlock(selectedAthleteId, {
+              name: blockName.trim(),
+              weeks: Number(weeks),
+              createdAt: new Date().toISOString().split("T")[0],
+            })
+            router.push("/programacion")
+          }}
+          className="flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Zap className="size-3.5" />
           Publicar y Activar Calendario
