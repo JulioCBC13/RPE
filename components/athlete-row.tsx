@@ -10,9 +10,9 @@ export function AthleteRow({ athlete }: { athlete: Athlete }) {
   const actionLabel = athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"
 
   return (
-    <TableRow>
+    <TableRow className="cursor-pointer">
       <TableCell>
-        <div className="flex items-center gap-3">
+        <Link href={`/atletas/${athlete.id}`} className="flex items-center gap-3 py-2 -mx-2 px-2 rounded hover:bg-muted/50 transition-colors">
           <Avatar className="size-9">
             <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
               {initialsOf(athlete.name)}
@@ -22,7 +22,7 @@ export function AthleteRow({ athlete }: { athlete: Athlete }) {
             <p className="truncate font-medium text-card-foreground">{athlete.name}</p>
             <p className="truncate text-xs text-muted-foreground">{athlete.email}</p>
           </div>
-        </div>
+        </Link>
       </TableCell>
       <TableCell className="text-muted-foreground">{athlete.program ?? "Sin programa"}</TableCell>
       <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(athlete.accessUntil)}</TableCell>
