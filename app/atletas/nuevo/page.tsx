@@ -8,16 +8,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldGroup, Field, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { useAppStore } from "@/lib/store"
 
 export default function NuevoAtletaPage() {
   const router = useRouter()
+  const { addAthlete } = useAppStore()
   const [submitting, setSubmitting] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSubmitting(true)
-    // Mock: a new athlete would be created on the backend. Redirect to enable access.
-    router.push("/atletas/a4/habilitar")
+
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+
+    // Add athlete to store
+    addAthlete({
+      name: name.trim(),
+      email: email.trim(),
+      status: "sin_acceso", // New athletes start without access
+    })
+
+    // Redirect to atletas list where the new athlete is now visible
+    router.push("/atletas")
   }
 
   return (

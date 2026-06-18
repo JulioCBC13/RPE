@@ -27,6 +27,8 @@ type AppStore = {
   setPendingAthleteId: (id: string | null) => void
   // Assign a block to an athlete
   assignBlock: (athleteId: string, block: ActiveBlock) => void
+  // Add a new athlete to the store
+  addAthlete: (athlete: Omit<StoreAthlete, "id" | "block">) => string
 }
 
 // ─── Initial mock data ────────────────────────────────────────────────────────
@@ -69,9 +71,22 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     )
   }
 
+  const addAthlete = (athlete: Omit<StoreAthlete, "id" | "block">) => {
+    const newId = `created-${Date.now()}`
+    const newAthlete: StoreAthlete = {
+      id: newId,
+      name: athlete.name,
+      email: athlete.email,
+      status: athlete.status,
+      block: null,
+    }
+    setAthletes((prev) => [...prev, newAthlete])
+    return newId
+  }
+
   return (
     <StoreContext.Provider
-      value={{ athletes, pendingAthleteId, setPendingAthleteId, assignBlock }}
+      value={{ athletes, pendingAthleteId, setPendingAthleteId, assignBlock, addAthlete }}
     >
       {children}
     </StoreContext.Provider>
