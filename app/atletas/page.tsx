@@ -71,8 +71,8 @@ export default function AtletasPage() {
           <TableBody>
             {list.map((a) => (
               <TableRow key={a.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <TableCell asChild>
-                  <Link href={`/atletas/${a.id}`} className="flex flex-col gap-0.5 py-3 px-4">
+                <TableCell>
+                  <Link href={`/atletas/${a.id}`} className="flex flex-col gap-0.5 py-3 px-4 -mx-4 -my-3">
                     <span className="text-sm font-medium text-card-foreground">{a.name}</span>
                     <span className="text-xs text-muted-foreground">{a.email}</span>
                   </Link>

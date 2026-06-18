@@ -1,5 +1,7 @@
+"use client"
+
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { useEffect, useState } from "react"
 import { ArrowLeft, CalendarClock, History } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { AlertCard } from "@/components/alert-card"
@@ -17,35 +19,59 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty"
-import {
-  getAthlete,
-  getAlertsForAthlete,
-  getSessionsForAthlete,
-  formatDate,
-  initialsOf,
-  athleteWeightProgress,
-  athleteRoutines,
-} from "@/lib/data"
-import { AthleteProfileClient } from "@/components/athlete-profile-client"
+import { useAppStore } from "@/lib/store"
+import { getAlertsForAthlete, getSessionsForAthlete, initialsOf, athleteWeightProgress, athleteRoutines } from "@/lib/data"
 
-export default async function AthleteProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  
-  // Try static data first
-  const athlete = getAthlete(id)
-  
-  // If not found and ID is dynamic (created at runtime), use client component to look in store
-  if (!athlete && id.startsWith("created-")) {
-    return <AthleteProfileClient athleteId={id} />
+interface AthleteProfile {
+  id: string
+  name: string
+  email: string
+  status: "activo" | "expirado" | "sin_acceso"
+}
+
+export function AthleteProfileClient({ athleteId }: { athleteId: string }) {
+  const { athletes: storeAthletes } = useAppStore()
+  const [athlete, setAthlete] = useState<AthleteProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const found = storeAthletes.find((a) => a.id === athleteId)
+    if (found) {
+      setAthlete({
+        id: found.id,
+        name: found.name,
+        email: found.email,
+        status: found.status,
+      })
+    }
+    setLoading(false)
+  }, [athleteId, storeAthletes])
+
+  if (loading) {
+    return (
+      <AppShell title="Perfil de atleta">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </AppShell>
+    )
   }
-  
-  // If not found at all
+
   if (!athlete) {
-    notFound()
+    return (
+      <AppShell title="Perfil de atleta">
+        <div className="flex flex-col items-center gap-4 py-12">
+          <p className="text-lg text-muted-foreground">Atleta no encontrado</p>
+          <Button nativeButton={false} render={<Link href="/atletas" />}>
+            Volver a atletas
+          </Button>
+        </div>
+      </AppShell>
+    )
   }
 
-  const alerts = getAlertsForAthlete(id)
-  const sessions = getSessionsForAthlete(id)
+  const alerts = getAlertsForAthlete(athlete.id)
+  const sessions = getSessionsForAthlete(athlete.id)
   const actionLabel = athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"
 
   return (

@@ -1,12 +1,13 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Zap } from "lucide-react"
+import { useAppStore } from "@/lib/store"
 import type { Routine } from "@/lib/data"
 
 interface RoutineDisplayProps {
@@ -15,6 +16,16 @@ interface RoutineDisplayProps {
 }
 
 export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
+  const router = useRouter()
+  const { setPendingAthleteId } = useAppStore()
+
+  const handleCreateRoutine = () => {
+    if (athleteId) {
+      setPendingAthleteId(athleteId)
+    }
+    router.push("/programacion/crear")
+  }
+
   if (!routine) {
     return (
       <Card>
@@ -24,8 +35,7 @@ export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
         <CardContent className="flex flex-col items-center gap-4 py-6 text-center">
           <p className="text-sm text-muted-foreground">Sin rutina asignada para este atleta.</p>
           <Button 
-            nativeButton={false} 
-            render={<Link href="/programacion/crear" />}
+            onClick={handleCreateRoutine}
             className="flex items-center gap-2"
           >
             <Zap className="size-4" />
