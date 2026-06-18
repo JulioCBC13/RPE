@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGrid, Bell, Users, Zap, LogOut, CreditCard, Table2, FilePlus2 } from "lucide-react"
+import { LayoutGrid, Bell, Users, LogOut, CreditCard, Table2, FilePlus2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { coach, coachAlerts } from "@/lib/data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -37,13 +37,6 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 flex w-60 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-16 items-center gap-2 px-5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-          <Zap className="size-4 text-primary-foreground" fill="currentColor" />
-        </div>
-        <span className="text-lg font-bold text-sidebar-primary">Coach-Pilot</span>
-      </div>
-
       <nav className="flex flex-1 flex-col gap-6 px-3 py-4">
         {navSections.map((section) => (
           <div key={section.title} className="flex flex-col gap-1">
