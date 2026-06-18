@@ -5,17 +5,9 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
-import { templates } from "@/lib/data"
 import { CalendarClock } from "lucide-react"
 
 const durations = [
@@ -26,8 +18,8 @@ const durations = [
 
 export function HabilitarForm({ athleteId }: { athleteId: string }) {
   const router = useRouter()
-  const [template, setTemplate] = useState<string>(templates[0].id)
-  const [duration, setDuration] = useState<string>("3")
+  const [duration, setDuration] = useState<string>("1")
+  const [linkTemplate, setLinkTemplate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const accessUntil = useMemo(() => {
@@ -47,27 +39,7 @@ export function HabilitarForm({ athleteId }: { athleteId: string }) {
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="template">Plantilla de entrenamiento</FieldLabel>
-          <Select value={template} onValueChange={(v) => setTemplate(v as string)}>
-            <SelectTrigger id="template" className="w-full">
-              <SelectValue placeholder="Selecciona una plantilla">
-                {() => templates.find((t) => t.id === template)?.name}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {templates.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-
-        <Field>
-          <FieldLabel>Duración</FieldLabel>
+          <FieldLabel>Duración del acceso</FieldLabel>
           <ToggleGroup
             value={[duration]}
             onValueChange={(value) => {
@@ -96,6 +68,16 @@ export function HabilitarForm({ athleteId }: { athleteId: string }) {
           Acceso hasta
         </span>
         <span className="text-sm font-semibold text-card-foreground tabular-nums">{accessUntil}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 px-3 py-2.5">
+        <div className="flex flex-col">
+          <label htmlFor="link-template" className="text-sm text-card-foreground">
+            Vincular plantilla base
+          </label>
+          <span className="text-xs text-muted-foreground">Opcional para clientes recreativos</span>
+        </div>
+        <Switch id="link-template" checked={linkTemplate} onCheckedChange={setLinkTemplate} />
       </div>
 
       <div className="flex flex-col gap-2">

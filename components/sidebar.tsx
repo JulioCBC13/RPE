@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGrid, Bell, Users, Zap, LogOut, CreditCard } from "lucide-react"
+import { LayoutGrid, Bell, Users, Zap, LogOut, CreditCard, Table2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { coach, coachAlerts } from "@/lib/data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -19,12 +19,13 @@ const navSections = [
     title: "Gestión",
     items: [
       { href: "/atletas", label: "Atletas", icon: Users },
+      { href: "/payments", label: "Validación de Pagos", icon: CreditCard },
     ],
   },
   {
-    title: "Payments",
+    title: "Programación",
     items: [
-      { href: "/payments", label: "Validación de Pagos", icon: CreditCard },
+      { href: "/programacion", label: "Laboratorio", icon: Table2 },
     ],
   },
 ]
