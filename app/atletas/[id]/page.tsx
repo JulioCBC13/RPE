@@ -74,7 +74,7 @@ export default async function AthleteProfilePage({ params }: { params: Promise<{
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <WeightProgressChart entries={athleteWeightProgress[athlete.id] || []} athleteName={athlete.name} />
-          <RoutineDisplay routine={athleteRoutines[athlete.id]} />
+          <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} />
         </section>
 
         <WeightProgressTable entries={athleteWeightProgress[athlete.id] || []} />

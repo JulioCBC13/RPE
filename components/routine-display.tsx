@@ -1,21 +1,36 @@
 "use client"
 
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { Zap } from "lucide-react"
 import type { Routine } from "@/lib/data"
 
 interface RoutineDisplayProps {
   routine: Routine | undefined
+  athleteId?: string
 }
 
-export function RoutineDisplay({ routine }: RoutineDisplayProps) {
+export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
   if (!routine) {
     return (
       <Card>
-        <CardContent className="py-6 text-center text-sm text-muted-foreground">
-          Sin rutina asignada para este atleta.
+        <CardHeader>
+          <CardTitle className="text-base">Rutina Actual</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-4 py-6 text-center">
+          <p className="text-sm text-muted-foreground">Sin rutina asignada para este atleta.</p>
+          <Button 
+            nativeButton={false} 
+            render={<Link href="/programacion/crear" />}
+            className="flex items-center gap-2"
+          >
+            <Zap className="size-4" />
+            Crear Rutina
+          </Button>
         </CardContent>
       </Card>
     )
