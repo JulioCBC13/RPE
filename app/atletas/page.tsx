@@ -145,7 +145,7 @@ export default function AtletasPage() {
         </div>
 
         {/* Main split layout */}
-        <div className={cn("grid gap-5", selected ? "grid-cols-[1fr_320px]" : "grid-cols-1")}>
+        <div className="grid gap-5 grid-cols-1">
           {/* Left: tables */}
           <div className="flex flex-col gap-6">
             {otherAthletes.length > 0 && (
@@ -172,89 +172,7 @@ export default function AtletasPage() {
             )}
           </div>
 
-          {/* Right: detail panel */}
-          {selected && (
-            <div className="flex flex-col gap-3">
-              <Card className="flex flex-col">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base">{selected.name}</CardTitle>
-                      <p className="text-xs text-muted-foreground mt-0.5">{selected.email}</p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedId(null)}
-                      className="text-muted-foreground hover:text-card-foreground transition-colors"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                </CardHeader>
 
-                <CardContent className="flex flex-col gap-4 pt-0">
-                  {selected.block ? (
-                    /* Has block */
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-2.5">
-                        <CalendarCheck className="size-4 shrink-0 text-success" />
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-xs font-semibold text-success">Bloque Activo</span>
-                          <span className="text-sm font-bold text-card-foreground">
-                            {selected.block.name}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex flex-col gap-0.5 rounded bg-muted/50 px-2.5 py-2">
-                          <span className="text-muted-foreground">Semanas</span>
-                          <span className="font-semibold text-card-foreground">
-                            {selected.block.weeks}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5 rounded bg-muted/50 px-2.5 py-2">
-                          <span className="text-muted-foreground">Asignado</span>
-                          <span className="font-semibold text-card-foreground">
-                            {selected.block.createdAt}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => handleCreateBlock(selected.id)}
-                      >
-                        <FilePlus2 data-icon="inline-start" />
-                        Crear nuevo bloque
-                      </Button>
-                    </div>
-                  ) : (
-                    /* No block */
-                    <div className="flex flex-col items-center gap-3 py-6 text-center">
-                      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                        <Layers className="size-6 text-muted-foreground" />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-semibold text-card-foreground">
-                          Sin rutina asignada
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Este atleta no tiene un bloque activo todavía.
-                        </p>
-                      </div>
-                      <Button
-                        className="w-full bg-primary text-primary-foreground hover:opacity-90"
-                        onClick={() => handleCreateBlock(selected.id)}
-                      >
-                        <FilePlus2 data-icon="inline-start" />
-                        + Crear Bloque
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
     </AppShell>
