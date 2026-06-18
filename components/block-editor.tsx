@@ -146,13 +146,15 @@ export function BlockEditor() {
   }
 
   const deleteRow = (dayId: string, rowId: string) =>
-    setDays((prev) =>
-      prev.map((d) =>
+    setDays((prev) => {
+      const updated = prev.map((d) =>
         d.id !== dayId
           ? d
           : { ...d, rows: d.rows.filter((r) => r.id !== rowId) },
-      ),
-    )
+      )
+      // Eliminar día si queda sin filas
+      return updated.filter((d) => d.rows.length > 0)
+    })
 
   const duplicateDay = (dayId: string) => {
     setDays((prev) => {
@@ -209,7 +211,7 @@ export function BlockEditor() {
       }
     }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────���────────────────────────────
 
   return (
     <div className="flex flex-col gap-0 min-h-full">
