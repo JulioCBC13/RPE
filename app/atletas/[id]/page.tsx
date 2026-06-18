@@ -81,7 +81,7 @@ export default async function AthleteProfilePage({ params }: { params: Promise<{
           <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} />
         </section>
 
-        <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
+        <section className="grid grid-cols-1 gap-5">
           <div className="flex flex-col gap-5">
             <Card>
               <CardHeader>
@@ -92,36 +92,6 @@ export default async function AthleteProfilePage({ params }: { params: Promise<{
               </CardHeader>
               <CardContent>
                 <WeightProgressTable entries={athleteWeightProgress[athlete.id] || []} />
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <CalendarClock className="size-4" />
-                  Próximas sesiones
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {sessions.length === 0 ? (
-                  <Empty>
-                    <EmptyMedia>
-                      <CalendarClock className="size-8 text-muted-foreground" />
-                    </EmptyMedia>
-                    <EmptyHeader>
-                      <EmptyTitle>Sin sesiones próximas</EmptyTitle>
-                      <EmptyDescription>Asigna una rutina a este atleta</EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {sessions.map((session, i) => (
-                      <SessionRow key={i} session={session} />
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
