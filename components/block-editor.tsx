@@ -150,7 +150,7 @@ export function BlockEditor() {
       prev.map((d) =>
         d.id !== dayId
           ? d
-          : { ...d, rows: d.rows.length === 1 ? d.rows : d.rows.filter((r) => r.id !== rowId) },
+          : { ...d, rows: d.rows.filter((r) => r.id !== rowId) },
       ),
     )
 
