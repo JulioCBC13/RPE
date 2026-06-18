@@ -3,6 +3,7 @@
 import { useRef, useCallback, useState, useId } from "react"
 import { Trash2, Copy, Plus, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ExerciseCombobox } from "@/components/exercise-combobox"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -380,8 +381,6 @@ function ExerciseRowComp({
   deleteRow: (dayId: string, rowId: string) => void
 }) {
   const [hovered, setHovered] = useState(false)
-  const uid = useId()
-  const listId = `suggestions-${uid}`
 
   const cellBase =
     "h-7 w-full rounded-sm bg-transparent px-1.5 text-[11px] text-card-foreground caret-primary focus:bg-accent focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary/60 placeholder:text-muted-foreground/40"
@@ -402,23 +401,16 @@ function ExerciseRowComp({
         />
       </td>
 
-      {/* Exercise with datalist autocomplete */}
-      <td className="px-1 py-0.5">
-        <datalist id={listId}>
-          {EXERCISE_SUGGESTIONS.map((s) => (
-            <option key={s} value={s} />
-          ))}
-        </datalist>
-        <input
-          ref={registerRef(dayId, row.id, "exercise")}
-          list={listId}
-          type="text"
-          placeholder="Ejercicio..."
+      {/* Exercise with Combobox */}
+      <td className="px-0.5 py-0.5">
+        <ExerciseCombobox
           value={row.exercise}
-          onChange={(e) => updateRow(dayId, row.id, { exercise: e.target.value })}
-          onKeyDown={handleKeyDown(dayId, row.id, "exercise")}
-          className={cn(cellBase, "font-medium")}
-          autoComplete="off"
+          onChange={(v) => updateRow(dayId, row.id, { exercise: v })}
+          onCreateCustom={(name) => updateRow(dayId, row.id, { exercise: name })}
+          onTabNext={() => {
+            const setsRef = cellsRef.current[`${dayId}-${row.id}-sets`]
+            setsRef?.focus()
+          }}
         />
       </td>
 
