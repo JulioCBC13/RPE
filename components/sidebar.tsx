@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGrid, Bell, Users, Zap, LogOut, CreditCard, Table2 } from "lucide-react"
+import { LayoutGrid, Bell, Users, Zap, LogOut, CreditCard, Table2, FilePlus2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { coach, coachAlerts } from "@/lib/data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -26,6 +26,7 @@ const navSections = [
     title: "Programación",
     items: [
       { href: "/programacion", label: "Laboratorio", icon: Table2 },
+      { href: "/programacion/crear", label: "Crear Bloque", icon: FilePlus2 },
     ],
   },
 ]
