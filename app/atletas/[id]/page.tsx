@@ -4,6 +4,9 @@ import { ArrowLeft, CalendarClock, History } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { AlertCard } from "@/components/alert-card"
 import { SessionRow } from "@/components/session-row"
+import { WeightProgressChart } from "@/components/weight-progress-chart"
+import { WeightProgressTable } from "@/components/weight-progress-table"
+import { RoutineDisplay } from "@/components/routine-display"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,6 +23,8 @@ import {
   getSessionsForAthlete,
   formatDate,
   initialsOf,
+  athleteWeightProgress,
+  athleteRoutines,
 } from "@/lib/data"
 
 export default async function AthleteProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -66,6 +71,13 @@ export default async function AthleteProfilePage({ params }: { params: Promise<{
             </div>
           </CardContent>
         </Card>
+
+        <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <WeightProgressChart entries={athleteWeightProgress[athlete.id] || []} athleteName={athlete.name} />
+          <RoutineDisplay routine={athleteRoutines[athlete.id]} />
+        </section>
+
+        <WeightProgressTable entries={athleteWeightProgress[athlete.id] || []} />
 
         <section className="flex flex-col gap-3">
           <h3 className="text-base font-bold text-primary">Alertas activas</h3>

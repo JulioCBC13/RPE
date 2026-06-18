@@ -52,6 +52,31 @@ export type PendingVideo = {
   submittedAt: string
 }
 
+export type WeightEntry = {
+  date: string // ISO date
+  value: number // kg
+}
+
+export type RoutineExercise = {
+  name: string
+  sets: number
+  reps: string // e.g. "8-12" or "5"
+  rest: string // e.g. "90s" or "2min"
+  notes?: string
+}
+
+export type RoutineDay = {
+  day: string // "Lunes", "Martes", etc.
+  exercises: RoutineExercise[]
+}
+
+export type Routine = {
+  id: string
+  athleteId: string
+  blockName: string
+  days: RoutineDay[]
+}
+
 export type ProgressionAdjustment = {
   id: string
   athleteId: string
@@ -269,6 +294,136 @@ export function getAlertsForAthlete(id: string): CoachAlert[] {
 
 export function getSessionsForAthlete(id: string): TrainingSession[] {
   return sessionsByAthlete[id] ?? []
+}
+
+// --- Progreso de Peso (por atleta) ---
+export const athleteWeightProgress: Record<string, WeightEntry[]> = {
+  a1: [ // Lucía Fernández
+    { date: "2026-05-15", value: 62.5 },
+    { date: "2026-05-22", value: 62.8 },
+    { date: "2026-05-29", value: 63.1 },
+    { date: "2026-06-05", value: 63.4 },
+    { date: "2026-06-12", value: 63.7 },
+    { date: "2026-06-17", value: 64.0 },
+  ],
+  a2: [ // Diego Ramírez
+    { date: "2026-05-15", value: 80.2 },
+    { date: "2026-05-22", value: 80.5 },
+    { date: "2026-05-29", value: 80.9 },
+    { date: "2026-06-05", value: 81.1 },
+    { date: "2026-06-12", value: 81.4 },
+    { date: "2026-06-17", value: 81.8 },
+  ],
+  a3: [ // Martina Soto
+    { date: "2026-05-15", value: 58.0 },
+    { date: "2026-05-22", value: 58.2 },
+    { date: "2026-05-29", value: 58.5 },
+    { date: "2026-06-05", value: 58.8 },
+    { date: "2026-06-12", value: 59.0 },
+    { date: "2026-06-17", value: 59.3 },
+  ],
+  a4: [ // Andrés Castro
+    { date: "2026-05-15", value: 75.5 },
+    { date: "2026-05-22", value: 75.8 },
+    { date: "2026-05-29", value: 76.2 },
+    { date: "2026-06-05", value: 76.5 },
+    { date: "2026-06-12", value: 76.9 },
+    { date: "2026-06-17", value: 77.2 },
+  ],
+}
+
+// --- Rutinas (por atleta) ---
+export const athleteRoutines: Record<string, Routine> = {
+  a1: {
+    id: "r1",
+    athleteId: "a1",
+    blockName: "Bloque de acumulación - Semana 4",
+    days: [
+      {
+        day: "Lunes",
+        exercises: [
+          { name: "Sentadilla baja barra", sets: 4, reps: "6-8", rest: "3min" },
+          { name: "Leg press", sets: 3, reps: "8-10", rest: "2min" },
+          { name: "Extensión de cuádriceps", sets: 3, reps: "10-12", rest: "90s" },
+        ],
+      },
+      {
+        day: "Miércoles",
+        exercises: [
+          { name: "Press banca", sets: 4, reps: "6-8", rest: "3min" },
+          { name: "Press inclinado", sets: 3, reps: "8-10", rest: "2min" },
+          { name: "Pec deck", sets: 3, reps: "12-15", rest: "60s" },
+        ],
+      },
+      {
+        day: "Viernes",
+        exercises: [
+          { name: "Peso muerto convencional", sets: 3, reps: "5", rest: "3min", notes: "Enfoque en técnica" },
+          { name: "Remo barra", sets: 4, reps: "6-8", rest: "2min30s" },
+          { name: "Remo máquina", sets: 3, reps: "10-12", rest: "90s" },
+        ],
+      },
+    ],
+  },
+  a2: {
+    id: "r2",
+    athleteId: "a2",
+    blockName: "Peaking de fuerza - Semana 4 (Final)",
+    days: [
+      {
+        day: "Lunes",
+        exercises: [
+          { name: "Sentadilla baja barra", sets: 5, reps: "3", rest: "4min", notes: "Test de máximo" },
+          { name: "Sentadilla pausa 2s", sets: 3, reps: "3", rest: "3min" },
+        ],
+      },
+      {
+        day: "Miércoles",
+        exercises: [
+          { name: "Press banca", sets: 5, reps: "3", rest: "4min" },
+          { name: "Tablillas de press", sets: 3, reps: "3", rest: "3min" },
+        ],
+      },
+      {
+        day: "Viernes",
+        exercises: [
+          { name: "Peso muerto", sets: 5, reps: "2", rest: "4min" },
+          { name: "Halones de peso muerto", sets: 3, reps: "3", rest: "3min" },
+        ],
+      },
+    ],
+  },
+  a3: {
+    id: "r3",
+    athleteId: "a3",
+    blockName: "Full Body - Fase 1",
+    days: [
+      {
+        day: "Martes",
+        exercises: [
+          { name: "Sentadilla", sets: 3, reps: "8-10", rest: "2min" },
+          { name: "Press banca", sets: 3, reps: "8-10", rest: "2min" },
+          { name: "Remo barra", sets: 3, reps: "8-10", rest: "2min" },
+        ],
+      },
+      {
+        day: "Jueves",
+        exercises: [
+          { name: "Leg press", sets: 3, reps: "10-12", rest: "90s" },
+          { name: "Press inclinado", sets: 3, reps: "10-12", rest: "90s" },
+          { name: "Lat pulldown", sets: 3, reps: "10-12", rest: "90s" },
+        ],
+      },
+      {
+        day: "Sábado",
+        exercises: [
+          { name: "Peso muerto", sets: 3, reps: "6-8", rest: "2min30s" },
+          { name: "Dips", sets: 3, reps: "8-12", rest: "90s" },
+          { name: "Remo máquina", sets: 3, reps: "12-15", rest: "60s" },
+        ],
+      },
+    ],
+  },
 }
 
 export const stats = {
