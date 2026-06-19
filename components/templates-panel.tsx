@@ -204,6 +204,7 @@ function NewLegoModal({
               className="rounded border border-border bg-card px-2 py-1 text-xs text-card-foreground focus:border-primary focus:outline-none overflow-y-auto [&>option]:bg-card [&>option]:text-card-foreground [&>option:checked]:bg-primary/20 [&>option:checked]:text-primary [&>option:hover]:bg-muted"
             >
               <option value="">Seleccione una Carpeta</option>
+              <option value="__new__">+ Crear una Carpeta</option>
               {folders.map((f) => (
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
