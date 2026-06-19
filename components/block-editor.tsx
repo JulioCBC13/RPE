@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils"
 import { ExerciseCombobox } from "@/components/exercise-combobox"
 import { useAppStore } from "@/lib/store"
 import { TemplatesPanel, type LegoBlock } from "@/components/templates-panel"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -542,35 +541,19 @@ function ExerciseRowComp({
         />
       </td>
 
-      {/* Unit Toggle */}
+      {/* Unit Toggle - Single Button */}
       <td className="px-0.5 py-0.5">
-        <ToggleGroup
-          type="single"
-          value={row.unit}
-          onValueChange={(v) => {
-            if (v) updateRow(dayId, row.id, { unit: v as "kg" | "lb" })
+        <button
+          ref={registerRef(dayId, row.id, "unit")}
+          type="button"
+          onClick={() => {
+            updateRow(dayId, row.id, { unit: row.unit === "kg" ? "lb" : "kg" })
           }}
-          className="h-7"
-          onKeyDown={(e) => {
-            if (e.key === "Tab") {
-              e.preventDefault()
-              focusCell(dayId, row.id, "sets")
-            }
-          }}
+          onKeyDown={handleKeyDown(dayId, row.id, "unit")}
+          className="h-7 w-7 flex items-center justify-center rounded border border-border bg-muted/50 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
-          <ToggleGroupItem
-            value="kg"
-            className="h-7 px-1.5 text-[10px] data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
-          >
-            kg
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="lb"
-            className="h-7 px-1.5 text-[10px] data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
-          >
-            lb
-          </ToggleGroupItem>
-        </ToggleGroup>
+          {row.unit === "kg" ? "Kg" : "Lb"}
+        </button>
       </td>
 
       {/* Sets */}
