@@ -97,6 +97,7 @@ export function BlockEditor() {
   const [weeks, setWeeks] = useState("4")
   const [selectedAthleteId, setSelectedAthleteId] = useState<string>("")
   const [days, setDays] = useState<Day[]>([mkDay(1), mkDay(2), mkDay(3)])
+  const [published, setPublished] = useState(false)
 
   // The lego block currently being dragged
   const [draggingLego, setDraggingLego] = useState<LegoBlock | null>(null)
@@ -107,6 +108,8 @@ export function BlockEditor() {
   useEffect(() => {
     if (pendingAthleteId) {
       setSelectedAthleteId(pendingAthleteId)
+      setDays([mkDay(1), mkDay(2), mkDay(3)])
+      setPublished(false)
       setPendingAthleteId(null)
     }
   }, [pendingAthleteId, setPendingAthleteId])
@@ -258,7 +261,11 @@ export function BlockEditor() {
             <UserCircle2 className="size-4 shrink-0 text-muted-foreground" />
             <select
               value={selectedAthleteId}
-              onChange={(e) => setSelectedAthleteId(e.target.value)}
+              onChange={(e) => {
+                setSelectedAthleteId(e.target.value)
+                setDays([mkDay(1), mkDay(2), mkDay(3)])
+                setPublished(false)
+              }}
               className="h-8 rounded border border-border bg-card px-2 text-sm text-card-foreground focus:border-primary focus:outline-none"
             >
               <option value="">— Atleta —</option>
@@ -288,20 +295,25 @@ export function BlockEditor() {
           </select>
           <button
             type="button"
-            disabled={!selectedAthleteId || !blockName.trim()}
+            disabled={(!selectedAthleteId || !blockName.trim()) && !published}
             onClick={() => {
-              if (!selectedAthleteId || !blockName.trim()) return
+              if (published || !selectedAthleteId || !blockName.trim()) return
               assignBlock(selectedAthleteId, {
                 name: blockName.trim(),
                 weeks: Number(weeks),
                 createdAt: new Date().toISOString().split("T")[0],
               })
-              router.push("/programacion")
+              setPublished(true)
             }}
-            className="flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className={cn(
+              "flex h-8 items-center gap-1.5 rounded px-3 text-xs font-bold uppercase tracking-wider transition-colors duration-300",
+              published
+                ? "cursor-default bg-green-600 text-white"
+                : "bg-primary text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40",
+            )}
           >
             <Zap className="size-3.5" />
-            Publicar y Activar
+            {published ? "¡Bloque Activado y Guardado!" : "Publicar y Activar"}
           </button>
         </div>
 
