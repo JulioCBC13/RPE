@@ -159,9 +159,7 @@ function NewLegoModal({
 
   const handleSave = () => {
     if (!name.trim()) return
-    // If folderId is empty (""), create in a default folder or root
-    const targetFolder = folderId || "__root__"
-    onSave(name.trim(), targetFolder, exercises.filter((e) => e.exercise.trim()))
+    onSave(name.trim(), folderId, exercises.filter((e) => e.exercise.trim()))
     setName("")
     setFolderId("")
     setExercises([{ id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" }])
@@ -176,7 +174,7 @@ function NewLegoModal({
         <DialogHeader className="border-b border-border px-5 py-4">
           <DialogTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest">
             <Layers className="size-4 text-primary" />
-            Nuevo Lego
+            Nuevo Bloque
           </DialogTitle>
         </DialogHeader>
 
@@ -184,7 +182,7 @@ function NewLegoModal({
           {/* Name */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Nombre del Lego
+              Nombre del Bloque
             </label>
             <input
               className={inputCls}
@@ -194,18 +192,18 @@ function NewLegoModal({
             />
           </div>
 
-          {/* Folder */}
+          {/* Folder — optional */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Carpeta
+              Carpeta <span className="normal-case font-normal tracking-normal text-muted-foreground/50">(opcional)</span>
             </label>
             <select
               value={folderId}
               onChange={(e) => setFolderId(e.target.value)}
-              className="h-40 flex-1 rounded border border-border bg-muted/40 px-2 py-1 text-xs text-card-foreground focus:border-primary focus:outline-none overflow-y-auto"
+              size={8}
+              className="rounded border border-border bg-card px-2 py-1 text-xs text-card-foreground focus:border-primary focus:outline-none overflow-y-auto [&>option]:bg-card [&>option]:text-card-foreground [&>option:checked]:bg-primary/20 [&>option:checked]:text-primary [&>option:hover]:bg-muted"
             >
-              <option value="" className="bg-primary/20 text-primary font-semibold py-1">Crear una carpeta</option>
-              <option value="">Seleccionar carpeta...</option>
+              <option value="">Seleccione una Carpeta</option>
               {folders.map((f) => (
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
@@ -214,13 +212,10 @@ function NewLegoModal({
 
           {/* Exercises table */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Ejercicios
-            </label>
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border">
-                  {["Ejercicio", "Series", "Reps", ""].map((h) => (
+                  {["", "Series", "Reps", ""].map((h) => (
                     <th key={h} className="py-1 pr-2 text-left text-[9px] font-bold uppercase tracking-widest text-muted-foreground last:w-6">
                       {h}
                     </th>
@@ -264,7 +259,7 @@ function NewLegoModal({
               Cancelar
             </Button>
             <Button size="sm" className="text-xs" onClick={handleSave} disabled={!name.trim()}>
-              Guardar Lego
+              Guardar Bloque
             </Button>
           </div>
         </div>
