@@ -295,9 +295,8 @@ export function BlockEditor() {
           </select>
           <button
             type="button"
-            disabled={(!selectedAthleteId || !blockName.trim()) && !published}
+            disabled={published || !selectedAthleteId || !blockName.trim()}
             onClick={() => {
-              if (published || !selectedAthleteId || !blockName.trim()) return
               assignBlock(selectedAthleteId, {
                 name: blockName.trim(),
                 weeks: Number(weeks),
@@ -308,12 +307,12 @@ export function BlockEditor() {
             className={cn(
               "flex h-8 items-center gap-1.5 rounded px-3 text-xs font-bold uppercase tracking-wider transition-colors duration-300",
               published
-                ? "cursor-default bg-green-600 text-white"
+                ? "cursor-default bg-green-600/80 text-white"
                 : "bg-primary text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40",
             )}
           >
             <Zap className="size-3.5" />
-            {published ? "¡Bloque Activado y Guardado!" : "Publicar y Activar"}
+            {published ? "Bloque Activado" : "Publicar y Activar"}
           </button>
         </div>
 

@@ -143,10 +143,13 @@ function NewLegoModal({
 }) {
   const [name, setName] = useState("")
   const [folderId, setFolderId] = useState("")
+  const [newFolderName, setNewFolderName] = useState("")
   const [exercises, setExercises] = useState<LegoExercise[]>([
     { id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" },
   ])
   const [folders] = useState(INITIAL_FOLDERS)
+
+  const isCreatingFolder = folderId === "__new__"
 
   const addExRow = () =>
     setExercises((p) => [...p, { id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" }])
@@ -159,9 +162,14 @@ function NewLegoModal({
 
   const handleSave = () => {
     if (!name.trim()) return
-    onSave(name.trim(), folderId, exercises.filter((e) => e.exercise.trim()))
+    // If creating a new folder, encode the name into the folderId so handleSaveLego can parse it
+    const resolvedFolderId = isCreatingFolder
+      ? `__new__${newFolderName.trim() || "Sin nombre"}`
+      : folderId
+    onSave(name.trim(), resolvedFolderId, exercises.filter((e) => e.exercise.trim()))
     setName("")
     setFolderId("")
+    setNewFolderName("")
     setExercises([{ id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" }])
     onClose()
   }
@@ -199,7 +207,7 @@ function NewLegoModal({
             </label>
             <select
               value={folderId}
-              onChange={(e) => setFolderId(e.target.value)}
+              onChange={(e) => { setFolderId(e.target.value); setNewFolderName("") }}
               size={8}
               className="rounded border border-border bg-card px-2 py-1 text-xs text-card-foreground focus:border-primary focus:outline-none overflow-y-auto [&>option]:bg-card [&>option]:text-card-foreground [&>option:checked]:bg-primary/20 [&>option:checked]:text-primary [&>option:hover]:bg-muted"
             >
@@ -209,6 +217,15 @@ function NewLegoModal({
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
             </select>
+            {isCreatingFolder && (
+              <input
+                autoFocus
+                className="mt-1.5 h-7 w-full rounded border border-primary bg-muted/40 px-2 text-xs text-card-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+                placeholder="Nombre de la nueva carpeta..."
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+              />
+            )}
           </div>
 
           {/* Exercises table */}
@@ -274,44 +291,77 @@ function NewLegoModal({
 export function LegoCard({
   block,
   onDragStart,
+  onDelete,
 }: {
   block: LegoBlock
   onDragStart: (block: LegoBlock) => void
+  onDelete: (blockId: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null)
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setCtxPos({ x: e.clientX, y: e.clientY })
+  }
+
+  const closeCtx = () => setCtxPos(null)
 
   return (
-    <div className="flex flex-col gap-1">
-      <div
-        draggable
-        onDragStart={() => onDragStart(block)}
-        className="group flex cursor-grab items-center gap-2 rounded border border-border bg-muted/30 px-2.5 py-2 transition-colors hover:border-primary/50 hover:bg-primary/5 active:cursor-grabbing"
-      >
-        <GripVertical className="size-3 shrink-0 text-muted-foreground/30 group-hover:text-primary/40" />
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            setExpanded(!expanded)
-          }}
-          className="min-w-0 flex-1 text-left focus:outline-none"
-        >
-          <p className="truncate text-[11px] font-semibold text-card-foreground hover:text-primary transition-colors">{block.name}</p>
-        </button>
-        <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-          {block.exercises.length} ej.
-        </span>
-      </div>
-      {expanded && (
-        <div className="ml-2 flex flex-col gap-1 border-l border-border/50 pl-2 animate-in fade-in slide-in-from-top-1">
-          {block.exercises.map((ex, idx) => (
-            <div key={idx} className="text-[9px] text-muted-foreground">
-              <span className="text-primary/80">•</span> {ex.exercise} <span className="text-muted-foreground/50">({ex.sets}x{ex.reps})</span>
-            </div>
-          ))}
-        </div>
+    <>
+      {ctxPos && (
+        <>
+          {/* backdrop */}
+          <div className="fixed inset-0 z-40" onClick={closeCtx} />
+          {/* menu */}
+          <div
+            className="fixed z-50 min-w-[140px] rounded border border-border bg-card py-1 shadow-lg"
+            style={{ top: ctxPos.y, left: ctxPos.x }}
+          >
+            <button
+              type="button"
+              onClick={() => { onDelete(block.id); closeCtx() }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-400"
+            >
+              <Trash2 className="size-3" />
+              Eliminar
+            </button>
+          </div>
+        </>
       )}
-    </div>
+      <div className="flex flex-col gap-1">
+        <div
+          draggable
+          onDragStart={() => onDragStart(block)}
+          onContextMenu={handleContextMenu}
+          className="group flex cursor-grab items-center gap-2 rounded border border-border bg-muted/30 px-2.5 py-2 transition-colors hover:border-primary/50 hover:bg-primary/5 active:cursor-grabbing"
+        >
+          <GripVertical className="size-3 shrink-0 text-muted-foreground/30 group-hover:text-primary/40" />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setExpanded(!expanded)
+            }}
+            className="min-w-0 flex-1 text-left focus:outline-none"
+          >
+            <p className="truncate text-[11px] font-semibold text-card-foreground hover:text-primary transition-colors">{block.name}</p>
+          </button>
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+            {block.exercises.length} ej.
+          </span>
+        </div>
+        {expanded && (
+          <div className="ml-2 flex flex-col gap-1 border-l border-border/50 pl-2 animate-in fade-in slide-in-from-top-1">
+            {block.exercises.map((ex, idx) => (
+              <div key={idx} className="text-[9px] text-muted-foreground">
+                <span className="text-primary/80">•</span> {ex.exercise} <span className="text-muted-foreground/50">({ex.sets}x{ex.reps})</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -334,7 +384,7 @@ export function TemplatesPanel({
 
     setFolders((prev) => {
       if (folderId.startsWith("__new__")) {
-        const folderName = folderId.replace("__new__", "")
+        const folderName = folderId.slice("__new__".length) || "Sin nombre"
         const newFolder: LegoFolder = {
           id: Math.random().toString(36).slice(2),
           name: folderName,
@@ -342,10 +392,24 @@ export function TemplatesPanel({
         }
         return [...prev, newFolder]
       }
+      // No folder selected — add to a root-level "Sin carpeta" folder or create it
+      if (!folderId) {
+        const rootIdx = prev.findIndex((f) => f.id === "__root__")
+        if (rootIdx >= 0) {
+          return prev.map((f) => f.id === "__root__" ? { ...f, blocks: [...f.blocks, newBlock] } : f)
+        }
+        return [...prev, { id: "__root__", name: "Sin carpeta", blocks: [newBlock] }]
+      }
       return prev.map((f) =>
         f.id === folderId ? { ...f, blocks: [...f.blocks, newBlock] } : f,
       )
     })
+  }
+
+  const handleDeleteBlock = (blockId: string) => {
+    setFolders((prev) =>
+      prev.map((f) => ({ ...f, blocks: f.blocks.filter((b) => b.id !== blockId) }))
+    )
   }
 
   return (
@@ -393,7 +457,7 @@ export function TemplatesPanel({
                 </AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-1 px-2 pb-2 pt-0">
                   {folder.blocks.map((block) => (
-                    <LegoCard key={block.id} block={block} onDragStart={onDragStart} />
+                    <LegoCard key={block.id} block={block} onDragStart={onDragStart} onDelete={handleDeleteBlock} />
                   ))}
                 </AccordionContent>
               </AccordionItem>
