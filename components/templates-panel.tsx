@@ -162,9 +162,8 @@ function NewLegoModal({
 
   const handleSave = () => {
     if (!name.trim()) return
-    // If creating a new folder, encode the name into the folderId so handleSaveLego can parse it
     const resolvedFolderId = isCreatingFolder
-      ? `__new__${newFolderName.trim() || "Sin nombre"}`
+      ? `__new__${(newFolderName?.trim() || "Nueva Carpeta")}`
       : folderId
     onSave(name.trim(), resolvedFolderId, exercises.filter((e) => e.exercise.trim()))
     setName("")
@@ -205,18 +204,32 @@ function NewLegoModal({
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Carpeta <span className="normal-case font-normal tracking-normal text-muted-foreground/50">(opcional)</span>
             </label>
-            <select
-              value={folderId}
-              onChange={(e) => { setFolderId(e.target.value); setNewFolderName("") }}
-              size={8}
-              className="rounded border border-border bg-card px-2 py-1 text-xs text-card-foreground focus:border-primary focus:outline-none overflow-y-auto [&>option]:bg-card [&>option]:text-card-foreground [&>option:checked]:bg-primary/20 [&>option:checked]:text-primary [&>option:hover]:bg-muted"
-            >
-              <option value="">Seleccione una Carpeta</option>
-              <option value="__new__">+ Crear una Carpeta</option>
+            <div className="max-h-60 overflow-y-auto rounded border border-border bg-card">
+              <div 
+                className="cursor-pointer px-2 py-1.5 text-xs text-card-foreground hover:bg-muted/50 transition-colors"
+                onClick={() => { setFolderId(""); setNewFolderName("") }}
+              >
+                Seleccione una Carpeta
+              </div>
+              <div 
+                className="cursor-pointer px-2 py-1.5 text-xs text-primary font-semibold hover:bg-primary/10 transition-colors border-t border-border"
+                onClick={() => { setFolderId("__new__"); setNewFolderName("") }}
+              >
+                + Crear una Carpeta
+              </div>
               {folders.map((f) => (
-                <option key={f.id} value={f.id}>{f.name}</option>
+                <div
+                  key={f.id}
+                  className={cn(
+                    "cursor-pointer px-2 py-1.5 text-xs transition-colors border-t border-border/50",
+                    folderId === f.id ? "bg-primary/20 text-primary font-semibold" : "text-card-foreground hover:bg-muted/50"
+                  )}
+                  onClick={() => { setFolderId(f.id); setNewFolderName("") }}
+                >
+                  {f.name}
+                </div>
               ))}
-            </select>
+            </div>
             {isCreatingFolder && (
               <input
                 autoFocus
