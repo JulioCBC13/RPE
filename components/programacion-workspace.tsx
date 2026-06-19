@@ -3,6 +3,8 @@
 import { useRef, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -13,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { athletes as staticAthletes } from "@/lib/data"
 import { useAppStore } from "@/lib/store"
-import { CalendarCheck, ChevronLeft, ChevronRight, Lock, Unlock, AlertCircle } from "lucide-react"
+import { CalendarCheck, ChevronLeft, ChevronRight, Lock, Unlock, AlertCircle, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ---------- Types ----------
@@ -219,6 +221,18 @@ export function ProgramacionWorkspace() {
       .map((a) => ({ id: a.id, name: a.name, email: a.email, status: a.status as "activo" | "expirado" | "sin_acceso", block: null as null | { name: string; weeks: number; createdAt: string } })),
   ]
 
+  const DISCIPLINES = ["Todos", "Powerlifting", "Bodybuilding", "Estética", "Running"] as const
+
+  const [search, setSearch] = useState("")
+  const [disciplineFilter, setDisciplineFilter] = useState("Todos")
+
+  const filteredAthletes = athletes.filter((a) => {
+    const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase())
+    const matchesDiscipline =
+      disciplineFilter === "Todos" || a.discipline === disciplineFilter
+    return matchesSearch && matchesDiscipline
+  })
+
   const [athleteId, setAthleteId] = useState(athletes[0]?.id ?? "")
   const [blockIdx, setBlockIdx] = useState(0)
   const [weekNum, setWeekNum] = useState(1)
@@ -328,6 +342,45 @@ export function ProgramacionWorkspace() {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* ── Search & Discipline Filter Bar ── */}
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search input */}
+          <div className="relative flex-1 min-w-48">
+            <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar atleta por nombre..."
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+          {/* Discipline badges */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {DISCIPLINES.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDisciplineFilter(d)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-[11px] font-medium transition",
+                  disciplineFilter === d
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:text-card-foreground hover:border-muted-foreground"
+                )}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
+        {filteredAthletes.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">
+            No hay atletas que coincidan con los filtros.
+          </p>
+        )}
+      </div>
+
       {/* ── Block Control Header ── */}
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-card px-4 py-3">
         <div className="flex flex-wrap items-end gap-4">
@@ -342,11 +395,14 @@ export function ProgramacionWorkspace() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {athletes.map((a) => (
+                  {filteredAthletes.map((a) => (
                     <SelectItem key={a.id} value={a.id} className="text-xs">
                       <span>{a.name}</span>
+                      {a.discipline && (
+                        <span className="ml-1.5 text-[10px] text-muted-foreground">· {a.discipline}</span>
+                      )}
                       {a.block && (
-                        <span className="ml-1.5 text-[10px] text-success">— {a.block.name}</span>
+                        <span className="ml-1 text-[10px] text-success">— {a.block.name}</span>
                       )}
                     </SelectItem>
                   ))}
@@ -479,7 +535,21 @@ export function ProgramacionWorkspace() {
                 colSpan={4}
                 className="border-r border-border px-2 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-success"
               >
-                Objetivo del Coach — Preparante
+                <span className="flex items-center justify-center gap-2">
+                  Objetivo del Coach — Preparante
+                  {athlete?.discipline && (
+                    <span className={cn(
+                      "rounded-full border px-2 py-0.5 text-[9px] font-semibold normal-case tracking-normal",
+                      athlete.discipline === "Powerlifting" && "border-blue-500/40 bg-blue-500/15 text-blue-400",
+                      athlete.discipline === "Bodybuilding" && "border-green-500/40 bg-green-500/15 text-green-400",
+                      athlete.discipline === "Estética" && "border-purple-500/40 bg-purple-500/15 text-purple-400",
+                      athlete.discipline === "Running" && "border-orange-500/40 bg-orange-500/15 text-orange-400",
+                      !["Powerlifting","Bodybuilding","Estética","Running"].includes(athlete.discipline) && "border-border bg-muted text-muted-foreground",
+                    )}>
+                      {athlete.discipline}
+                    </span>
+                  )}
+                </span>
               </th>
               {/* Historial */}
               <th className="border-r border-border px-2 py-2 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">

@@ -18,6 +18,7 @@ export type StoreAthlete = {
   email: string
   status: AthleteStatus
   block: ActiveBlock | null
+  discipline?: string
 }
 
 type AppStore = {
@@ -42,6 +43,7 @@ const INITIAL_ATHLETES: StoreAthlete[] = [
     name: "Julio Bando",
     email: "julio@example.com",
     status: "activo",
+    discipline: "Powerlifting",
     block: { name: "Off Season B2", weeks: 4, createdAt: "2026-06-01" },
   },
   {
@@ -49,6 +51,7 @@ const INITIAL_ATHLETES: StoreAthlete[] = [
     name: "Santiago",
     email: "santiago@example.com",
     status: "activo",
+    discipline: "Bodybuilding",
     block: null,
   },
   {
@@ -56,6 +59,15 @@ const INITIAL_ATHLETES: StoreAthlete[] = [
     name: "Carlos Pérez",
     email: "carlos@example.com",
     status: "sin_acceso",
+    discipline: "Estética",
+    block: null,
+  },
+  {
+    id: "s4",
+    name: "María Gómez",
+    email: "maria@example.com",
+    status: "activo",
+    discipline: "Running",
     block: null,
   },
 ]
