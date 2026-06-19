@@ -1,11 +1,12 @@
 "use client"
 
-import { useRef, useCallback, useState, useId, useEffect } from "react"
+import { useRef, useCallback, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2, Copy, Plus, Zap, UserCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ExerciseCombobox } from "@/components/exercise-combobox"
 import { useAppStore } from "@/lib/store"
+import { TemplatesPanel, type LegoBlock } from "@/components/templates-panel"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,18 +29,6 @@ type Day = {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const EXERCISE_SUGGESTIONS = [
-  "COMP SQ", "COMP BENCH", "COMP DL",
-  "LOW BAR SQ", "HIGH BAR SQ", "FRONT SQ", "PAUSE SQ", "TEMPO SQ",
-  "FLAT BENCH", "INCLINE BENCH", "CLOSE GRIP BENCH", "PAUSE BENCH",
-  "CONV DL", "SUMO DL", "RDL", "STIFF LEG DL",
-  "BULGARAS", "LUNGES", "LEG PRESS", "LEG CURL", "LEG EXT",
-  "ROW", "PENDLAY ROW", "CABLE ROW", "PULLDOWN", "PULL UP",
-  "OHP", "DUMBBELL OHP", "LATERAL RAISE",
-  "FACE PULL", "TRICEP PUSHDOWN", "CURL",
-  "HIP THRUST", "GLUTE BRIDGE", "AB WHEEL",
-]
 
 const COLS = ["classification", "exercise", "sets", "reps", "rpe", "rest"] as const
 type ColKey = typeof COLS[number]
@@ -105,6 +94,11 @@ export function BlockEditor() {
   const [selectedAthleteId, setSelectedAthleteId] = useState<string>("")
   const [days, setDays] = useState<Day[]>([mkDay(1), mkDay(2), mkDay(3)])
 
+  // The lego block currently being dragged
+  const [draggingLego, setDraggingLego] = useState<LegoBlock | null>(null)
+  // Which day is being hovered during a drag
+  const [dropTargetDayId, setDropTargetDayId] = useState<string | null>(null)
+
   // Pre-select athlete if coming from the Atletas page
   useEffect(() => {
     if (pendingAthleteId) {
@@ -155,7 +149,6 @@ export function BlockEditor() {
         return { ...d, rows }
       }),
     )
-    // Focus exercise cell after state update
     setTimeout(() => focusCell(dayId, newRow.id, "exercise"), 30)
   }
 
@@ -166,7 +159,6 @@ export function BlockEditor() {
           ? d
           : { ...d, rows: d.rows.filter((r) => r.id !== rowId) },
       )
-      // Eliminar día si queda sin filas
       return updated.filter((d) => d.rows.length > 0)
     })
 
@@ -186,8 +178,26 @@ export function BlockEditor() {
     })
   }
 
-  const addDay = () =>
-    setDays((prev) => [...prev, mkDay(prev.length + 1)])
+  const addDay = () => setDays((prev) => [...prev, mkDay(prev.length + 1)])
+
+  // ── Drop lego into day ─────────────────────────────────────────────────────
+
+  const dropLegoOnDay = (dayId: string, lego: LegoBlock) => {
+    const newRows: ExerciseRow[] = lego.exercises.map((ex) => ({
+      id: Math.random().toString(36).slice(2),
+      classification: "Accesorio" as Classification,
+      exercise: ex.exercise,
+      sets: ex.sets,
+      reps: ex.reps,
+      rpe: "",
+      rest: "",
+    }))
+    setDays((prev) =>
+      prev.map((d) =>
+        d.id !== dayId ? d : { ...d, rows: [...d.rows, ...newRows] },
+      ),
+    )
+  }
 
   // ── keyboard navigation ────────────────────────────────────────────────────
 
@@ -200,7 +210,6 @@ export function BlockEditor() {
 
       if (e.key === "Tab" && !e.shiftKey) {
         e.preventDefault()
-        // Last editable col: create new row
         if (col === "rest") {
           addRow(dayId, rowId)
         } else {
@@ -225,87 +234,112 @@ export function BlockEditor() {
       }
     }
 
-  // ─────��──────────────────────────────────────���────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-0 min-h-full">
-      {/* ── Top Bar ─────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background px-4 py-2.5">
-        {/* Athlete selector */}
-        <div className="flex items-center gap-1.5">
-          <UserCircle2 className="size-4 shrink-0 text-muted-foreground" />
+    <div
+      className="flex h-full min-h-screen flex-row"
+      onDragEnd={() => { setDraggingLego(null); setDropTargetDayId(null) }}
+    >
+      {/* ── Templates Panel (left column) ─────────────────────────────────── */}
+      <TemplatesPanel onDragStart={(block) => setDraggingLego(block)} />
+
+      {/* ── Main Editor (center) ──────────────────────────────────────────── */}
+      <div className="flex flex-1 flex-col overflow-auto">
+
+        {/* ── Top Bar ───────────────────────────────────────────────────── */}
+        <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background px-4 py-2.5">
+          {/* Athlete selector */}
+          <div className="flex items-center gap-1.5">
+            <UserCircle2 className="size-4 shrink-0 text-muted-foreground" />
+            <select
+              value={selectedAthleteId}
+              onChange={(e) => setSelectedAthleteId(e.target.value)}
+              className="h-8 rounded border border-border bg-card px-2 text-sm text-card-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="">— Atleta —</option>
+              {athletes.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="h-5 w-px bg-border" />
+
+          <input
+            type="text"
+            placeholder="Nombre del Bloque — ej: Off Season B2"
+            value={blockName}
+            onChange={(e) => setBlockName(e.target.value)}
+            className="h-8 flex-1 rounded border border-border bg-card px-3 text-sm font-semibold text-card-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
           <select
-            value={selectedAthleteId}
-            onChange={(e) => setSelectedAthleteId(e.target.value)}
+            value={weeks}
+            onChange={(e) => setWeeks(e.target.value)}
             className="h-8 rounded border border-border bg-card px-2 text-sm text-card-foreground focus:border-primary focus:outline-none"
           >
-            <option value="">— Atleta —</option>
-            {athletes.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
+            {["4", "5", "6"].map((w) => (
+              <option key={w} value={w}>{w} semanas</option>
             ))}
           </select>
+          <button
+            type="button"
+            disabled={!selectedAthleteId || !blockName.trim()}
+            onClick={() => {
+              if (!selectedAthleteId || !blockName.trim()) return
+              assignBlock(selectedAthleteId, {
+                name: blockName.trim(),
+                weeks: Number(weeks),
+                createdAt: new Date().toISOString().split("T")[0],
+              })
+              router.push("/programacion")
+            }}
+            className="flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Zap className="size-3.5" />
+            Publicar y Activar
+          </button>
         </div>
 
-        <div className="h-5 w-px bg-border" />
-
-        <input
-          type="text"
-          placeholder="Nombre del Bloque — ej: Off Season B2"
-          value={blockName}
-          onChange={(e) => setBlockName(e.target.value)}
-          className="h-8 flex-1 rounded border border-border bg-card px-3 text-sm font-semibold text-card-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-        />
-        <select
-          value={weeks}
-          onChange={(e) => setWeeks(e.target.value)}
-          className="h-8 rounded border border-border bg-card px-2 text-sm text-card-foreground focus:border-primary focus:outline-none"
-        >
-          {["4", "5", "6"].map((w) => (
-            <option key={w} value={w}>{w} semanas</option>
+        {/* ── Days Grid ───────────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4 p-4">
+          {days.map((day) => (
+            <DayTable
+              key={day.id}
+              day={day}
+              registerRef={registerRef}
+              handleKeyDown={handleKeyDown}
+              updateRow={updateRow}
+              addRow={addRow}
+              deleteRow={deleteRow}
+              duplicateDay={duplicateDay}
+              isDragOver={dropTargetDayId === day.id}
+              onDragOver={(e) => {
+                if (!draggingLego) return
+                e.preventDefault()
+                setDropTargetDayId(day.id)
+              }}
+              onDragLeave={() => {
+                if (dropTargetDayId === day.id) setDropTargetDayId(null)
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (draggingLego) dropLegoOnDay(day.id, draggingLego)
+                setDropTargetDayId(null)
+                setDraggingLego(null)
+              }}
+            />
           ))}
-        </select>
-        <button
-          type="button"
-          disabled={!selectedAthleteId || !blockName.trim()}
-          onClick={() => {
-            if (!selectedAthleteId || !blockName.trim()) return
-            assignBlock(selectedAthleteId, {
-              name: blockName.trim(),
-              weeks: Number(weeks),
-              createdAt: new Date().toISOString().split("T")[0],
-            })
-            router.push("/programacion")
-          }}
-          className="flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Zap className="size-3.5" />
-          Publicar y Activar Calendario
-        </button>
-      </div>
 
-      {/* ── Days Grid ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 p-4">
-        {days.map((day) => (
-          <DayTable
-            key={day.id}
-            day={day}
-            registerRef={registerRef}
-            handleKeyDown={handleKeyDown}
-            updateRow={updateRow}
-            addRow={addRow}
-            deleteRow={deleteRow}
-            duplicateDay={duplicateDay}
-          />
-        ))}
-
-        <button
-          type="button"
-          onClick={addDay}
-          className="flex h-9 items-center justify-center gap-2 rounded border border-dashed border-border text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-        >
-          <Plus className="size-4" />
-          Añadir Día
-        </button>
+          <button
+            type="button"
+            onClick={addDay}
+            className="flex h-9 items-center justify-center gap-2 rounded border border-dashed border-border text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <Plus className="size-4" />
+            Añadir Día
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -321,6 +355,10 @@ function DayTable({
   addRow,
   deleteRow,
   duplicateDay,
+  isDragOver,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: {
   day: Day
   registerRef: (dayId: string, rowId: string, col: ColKey) => (el: any) => void
@@ -329,14 +367,38 @@ function DayTable({
   addRow: (dayId: string, afterRowId?: string) => void
   deleteRow: (dayId: string, rowId: string) => void
   duplicateDay: (dayId: string) => void
+  isDragOver: boolean
+  onDragOver: (e: React.DragEvent) => void
+  onDragLeave: () => void
+  onDrop: (e: React.DragEvent) => void
 }) {
   return (
-    <div className="overflow-hidden rounded border border-border bg-card">
+    <div
+      className={cn(
+        "overflow-hidden rounded border bg-card transition-colors duration-150",
+        isDragOver
+          ? "border-primary border-dashed bg-primary/5 ring-1 ring-primary/30"
+          : "border-border",
+      )}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
       {/* Day header */}
-      <div className="flex items-center justify-between border-b border-border bg-muted/50 px-3 py-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
-          {day.label}
-        </span>
+      <div className={cn(
+        "flex items-center justify-between border-b px-3 py-1.5 transition-colors",
+        isDragOver ? "border-primary/30 bg-primary/10" : "border-border bg-muted/50",
+      )}>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
+            {day.label}
+          </span>
+          {isDragOver && (
+            <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary animate-pulse">
+              Suelta aquí
+            </span>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => duplicateDay(day.id)}
@@ -360,15 +422,7 @@ function DayTable({
         </colgroup>
         <thead>
           <tr className="border-b border-border">
-            {[
-              "CLASIFICACIÓN",
-              "EJERCICIO",
-              "SERIES",
-              "REPS",
-              "RPE",
-              "DESCANSO",
-              "",
-            ].map((h) => (
+            {["CLASIFICACIÓN", "EJERCICIO", "SERIES", "REPS", "RPE", "DESCANSO", ""].map((h) => (
               <th
                 key={h}
                 className="px-2 py-1 text-left text-[9px] font-bold uppercase tracking-widest text-muted-foreground"
@@ -428,9 +482,14 @@ function ExerciseRowComp({
   const cellBase =
     "h-7 w-full rounded-sm bg-transparent px-1.5 text-[11px] text-card-foreground caret-primary focus:bg-accent focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary/60 placeholder:text-muted-foreground/40"
 
+  const isAccesorio = row.classification === "Accesorio"
+
   return (
     <tr
-      className="group border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+      className={cn(
+        "group border-b border-border/50 last:border-0 transition-colors",
+        isAccesorio ? "hover:bg-muted/20" : "hover:bg-muted/30",
+      )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -451,8 +510,7 @@ function ExerciseRowComp({
           onChange={(v) => updateRow(dayId, row.id, { exercise: v })}
           onCreateCustom={(name) => updateRow(dayId, row.id, { exercise: name })}
           onTabNext={() => {
-            const setsRef = cellsRef.current[`${dayId}-${row.id}-sets`]
-            setsRef?.focus()
+            registerRef(dayId, row.id, "sets")
           }}
         />
       </td>
@@ -528,3 +586,5 @@ function ExerciseRowComp({
     </tr>
   )
 }
+
+

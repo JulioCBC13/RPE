@@ -29,6 +29,9 @@ type AppStore = {
   assignBlock: (athleteId: string, block: ActiveBlock) => void
   // Add a new athlete to the store
   addAthlete: (athlete: Omit<StoreAthlete, "id" | "block">) => string
+  // Sidebar collapsed state
+  sidebarCollapsed: boolean
+  setSidebarCollapsed: (v: boolean) => void
 }
 
 // ─── Initial mock data ────────────────────────────────────────────────────────
@@ -64,6 +67,7 @@ const StoreContext = createContext<AppStore | null>(null)
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [athletes, setAthletes] = useState<StoreAthlete[]>(INITIAL_ATHLETES)
   const [pendingAthleteId, setPendingAthleteId] = useState<string | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const assignBlock = (athleteId: string, block: ActiveBlock) => {
     setAthletes((prev) =>
@@ -86,7 +90,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreContext.Provider
-      value={{ athletes, pendingAthleteId, setPendingAthleteId, assignBlock, addAthlete }}
+      value={{ athletes, pendingAthleteId, setPendingAthleteId, assignBlock, addAthlete, sidebarCollapsed, setSidebarCollapsed }}
     >
       {children}
     </StoreContext.Provider>

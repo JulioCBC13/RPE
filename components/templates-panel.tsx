@@ -1,0 +1,381 @@
+"use client"
+
+import { useState } from "react"
+import { Plus, Layers, FolderOpen, Trash2, GripVertical, X } from "lucide-react"
+import { cn } from "@/lib/utils"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type LegoExercise = {
+  id: string
+  exercise: string
+  sets: string
+  reps: string
+}
+
+export type LegoBlock = {
+  id: string
+  name: string
+  exercises: LegoExercise[]
+}
+
+export type LegoFolder = {
+  id: string
+  name: string
+  blocks: LegoBlock[]
+}
+
+// ─── Initial mock data ────────────────────────────────────────────────────────
+
+const INITIAL_FOLDERS: LegoFolder[] = [
+  {
+    id: "f1",
+    name: "Espalda",
+    blocks: [
+      {
+        id: "lb1",
+        name: "Hipertrofia Espalda",
+        exercises: [
+          { id: "e1", exercise: "PULL UP", sets: "4", reps: "8-10" },
+          { id: "e2", exercise: "CABLE ROW", sets: "3", reps: "12-15" },
+          { id: "e3", exercise: "FACE PULL", sets: "3", reps: "15-20" },
+        ],
+      },
+      {
+        id: "lb2",
+        name: "Densidad de Tracción",
+        exercises: [
+          { id: "e4", exercise: "PULLDOWN", sets: "4", reps: "10-12" },
+          { id: "e5", exercise: "PENDLAY ROW", sets: "4", reps: "6-8" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "f2",
+    name: "Pierna",
+    blocks: [
+      {
+        id: "lb3",
+        name: "Accesorios Quads",
+        exercises: [
+          { id: "e6", exercise: "LEG PRESS", sets: "4", reps: "12-15" },
+          { id: "e7", exercise: "LEG EXT", sets: "3", reps: "15-20" },
+          { id: "e8", exercise: "LUNGES", sets: "3", reps: "10/10" },
+        ],
+      },
+      {
+        id: "lb4",
+        name: "Estabilidad Cadera",
+        exercises: [
+          { id: "e9", exercise: "HIP THRUST", sets: "4", reps: "10-12" },
+          { id: "e10", exercise: "GLUTE BRIDGE", sets: "3", reps: "15" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "f3",
+    name: "Empuje",
+    blocks: [
+      {
+        id: "lb5",
+        name: "Accesorios Press",
+        exercises: [
+          { id: "e11", exercise: "INCLINE BENCH", sets: "3", reps: "10-12" },
+          { id: "e12", exercise: "DUMBBELL OHP", sets: "3", reps: "12" },
+          { id: "e13", exercise: "LATERAL RAISE", sets: "3", reps: "15-20" },
+          { id: "e14", exercise: "TRICEP PUSHDOWN", sets: "3", reps: "15" },
+        ],
+      },
+    ],
+  },
+]
+
+// ─── New Lego Modal ───────────────────────────────────────────────────────────
+
+function NewLegoModal({
+  open,
+  onClose,
+  onSave,
+}: {
+  open: boolean
+  onClose: () => void
+  onSave: (name: string, folderId: string, exercises: LegoExercise[]) => void
+}) {
+  const [name, setName] = useState("")
+  const [folderId, setFolderId] = useState("")
+  const [newFolderName, setNewFolderName] = useState("")
+  const [exercises, setExercises] = useState<LegoExercise[]>([
+    { id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" },
+  ])
+  const [folders] = useState(INITIAL_FOLDERS)
+
+  const addExRow = () =>
+    setExercises((p) => [...p, { id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" }])
+
+  const removeExRow = (id: string) =>
+    setExercises((p) => p.filter((e) => e.id !== id))
+
+  const updateEx = (id: string, field: keyof LegoExercise, val: string) =>
+    setExercises((p) => p.map((e) => (e.id === id ? { ...e, [field]: val } : e)))
+
+  const handleSave = () => {
+    if (!name.trim()) return
+    const targetFolder = newFolderName.trim() ? `__new__${newFolderName.trim()}` : folderId
+    onSave(name.trim(), targetFolder, exercises.filter((e) => e.exercise.trim()))
+    setName("")
+    setFolderId("")
+    setNewFolderName("")
+    setExercises([{ id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" }])
+    onClose()
+  }
+
+  const inputCls = "h-7 w-full rounded border border-border bg-muted/40 px-2 text-xs text-card-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg border-border bg-card p-0 text-card-foreground">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest">
+            <Layers className="size-4 text-primary" />
+            Nuevo Lego
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4 p-5">
+          {/* Name */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Nombre del Lego
+            </label>
+            <input
+              className={inputCls}
+              placeholder="ej: Hipertrofia Espalda"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          {/* Folder */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Carpeta
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={folderId}
+                onChange={(e) => setFolderId(e.target.value)}
+                className="h-7 flex-1 rounded border border-border bg-muted/40 px-2 text-xs text-card-foreground focus:border-primary focus:outline-none"
+              >
+                <option value="">Seleccionar carpeta...</option>
+                {folders.map((f) => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+              <span className="flex items-center text-[10px] text-muted-foreground">o</span>
+              <input
+                className="h-7 flex-1 rounded border border-border bg-muted/40 px-2 text-xs text-card-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
+                placeholder="Nueva carpeta..."
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Exercises table */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Ejercicios
+            </label>
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-border">
+                  {["Ejercicio", "Series", "Reps", ""].map((h) => (
+                    <th key={h} className="py-1 pr-2 text-left text-[9px] font-bold uppercase tracking-widest text-muted-foreground last:w-6">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {exercises.map((ex) => (
+                  <tr key={ex.id} className="border-b border-border/40">
+                    <td className="py-0.5 pr-1.5">
+                      <input className={inputCls} placeholder="Ejercicio" value={ex.exercise} onChange={(e) => updateEx(ex.id, "exercise", e.target.value)} />
+                    </td>
+                    <td className="py-0.5 pr-1.5 w-14">
+                      <input className={inputCls} placeholder="4" value={ex.sets} onChange={(e) => updateEx(ex.id, "sets", e.target.value)} />
+                    </td>
+                    <td className="py-0.5 pr-1.5 w-20">
+                      <input className={inputCls} placeholder="10-12" value={ex.reps} onChange={(e) => updateEx(ex.id, "reps", e.target.value)} />
+                    </td>
+                    <td className="py-0.5">
+                      <button type="button" onClick={() => removeExRow(ex.id)} className="flex size-5 items-center justify-center rounded text-muted-foreground/50 hover:bg-muted hover:text-danger">
+                        <X className="size-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button
+              type="button"
+              onClick={addExRow}
+              className="mt-1 flex items-center gap-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Plus className="size-3" />
+              Añadir ejercicio
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-2 border-t border-border pt-3">
+            <Button variant="ghost" size="sm" className="text-xs" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button size="sm" className="text-xs" onClick={handleSave} disabled={!name.trim()}>
+              Guardar Lego
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── Lego Card ────────────────────────────────────────────────────────────────
+
+export function LegoCard({
+  block,
+  onDragStart,
+}: {
+  block: LegoBlock
+  onDragStart: (block: LegoBlock) => void
+}) {
+  return (
+    <div
+      draggable
+      onDragStart={() => onDragStart(block)}
+      className="group flex cursor-grab items-center gap-2 rounded border border-border bg-muted/30 px-2.5 py-2 transition-colors hover:border-primary/50 hover:bg-primary/5 active:cursor-grabbing"
+    >
+      <GripVertical className="size-3 shrink-0 text-muted-foreground/30 group-hover:text-primary/40" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[11px] font-semibold text-card-foreground">{block.name}</p>
+      </div>
+      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+        {block.exercises.length} ej.
+      </span>
+    </div>
+  )
+}
+
+// ─── Main Templates Panel ─────────────────────────────────────────────────────
+
+export function TemplatesPanel({
+  onDragStart,
+}: {
+  onDragStart: (block: LegoBlock) => void
+}) {
+  const [folders, setFolders] = useState<LegoFolder[]>(INITIAL_FOLDERS)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const handleSaveLego = (name: string, folderId: string, exercises: LegoExercise[]) => {
+    const newBlock: LegoBlock = {
+      id: Math.random().toString(36).slice(2),
+      name,
+      exercises,
+    }
+
+    setFolders((prev) => {
+      if (folderId.startsWith("__new__")) {
+        const folderName = folderId.replace("__new__", "")
+        const newFolder: LegoFolder = {
+          id: Math.random().toString(36).slice(2),
+          name: folderName,
+          blocks: [newBlock],
+        }
+        return [...prev, newFolder]
+      }
+      return prev.map((f) =>
+        f.id === folderId ? { ...f, blocks: [...f.blocks, newBlock] } : f,
+      )
+    })
+  }
+
+  return (
+    <>
+      <NewLegoModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSaveLego}
+      />
+
+      <aside className="flex h-full w-56 shrink-0 flex-col border-l border-border bg-card">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
+          <div className="flex items-center gap-1.5">
+            <Layers className="size-3.5 text-primary" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-card-foreground">
+              Templates
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-1 rounded bg-primary/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            <Plus className="size-3" />
+            Nuevo
+          </button>
+        </div>
+
+        {/* Folders */}
+        <div className="flex-1 overflow-y-auto">
+          <Accordion type="multiple" defaultValue={folders.map((f) => f.id)} className="w-full">
+            {folders.map((folder) => (
+              <AccordionItem
+                key={folder.id}
+                value={folder.id}
+                className="border-b border-border/60"
+              >
+                <AccordionTrigger className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-card-foreground hover:no-underline [&>svg]:size-3 [&>svg]:shrink-0">
+                  <FolderOpen className="size-3 text-primary/60" />
+                  <span className="flex-1 text-left">{folder.name}</span>
+                  <span className="mr-1 rounded bg-muted px-1 py-0.5 text-[9px] font-semibold text-muted-foreground/70">
+                    {folder.blocks.length}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-1 px-2 pb-2 pt-0">
+                  {folder.blocks.map((block) => (
+                    <LegoCard key={block.id} block={block} onDragStart={onDragStart} />
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+
+        {/* Footer hint */}
+        <div className="border-t border-border px-3 py-2">
+          <p className="text-[9px] leading-relaxed text-muted-foreground/50">
+            Arrastra un Lego sobre un D&iacute;a para inyectar sus ejercicios.
+          </p>
+        </div>
+      </aside>
+    </>
+  )
+}
