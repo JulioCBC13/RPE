@@ -266,19 +266,39 @@ export function LegoCard({
   block: LegoBlock
   onDragStart: (block: LegoBlock) => void
 }) {
+  const [expanded, setExpanded] = useState(false)
+
   return (
-    <div
-      draggable
-      onDragStart={() => onDragStart(block)}
-      className="group flex cursor-grab items-center gap-2 rounded border border-border bg-muted/30 px-2.5 py-2 transition-colors hover:border-primary/50 hover:bg-primary/5 active:cursor-grabbing"
-    >
-      <GripVertical className="size-3 shrink-0 text-muted-foreground/30 group-hover:text-primary/40" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[11px] font-semibold text-card-foreground">{block.name}</p>
+    <div className="flex flex-col gap-1">
+      <div
+        draggable
+        onDragStart={() => onDragStart(block)}
+        className="group flex cursor-grab items-center gap-2 rounded border border-border bg-muted/30 px-2.5 py-2 transition-colors hover:border-primary/50 hover:bg-primary/5 active:cursor-grabbing"
+      >
+        <GripVertical className="size-3 shrink-0 text-muted-foreground/30 group-hover:text-primary/40" />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpanded(!expanded)
+          }}
+          className="min-w-0 flex-1 text-left focus:outline-none"
+        >
+          <p className="truncate text-[11px] font-semibold text-card-foreground hover:text-primary transition-colors">{block.name}</p>
+        </button>
+        <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+          {block.exercises.length} ej.
+        </span>
       </div>
-      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-        {block.exercises.length} ej.
-      </span>
+      {expanded && (
+        <div className="ml-2 flex flex-col gap-1 border-l border-border/50 pl-2 animate-in fade-in slide-in-from-top-1">
+          {block.exercises.map((ex, idx) => (
+            <div key={idx} className="text-[9px] text-muted-foreground">
+              <span className="text-primary/80">•</span> {ex.exercise} <span className="text-muted-foreground/50">({ex.sets}x{ex.reps})</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

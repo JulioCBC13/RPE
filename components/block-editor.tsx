@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { ExerciseCombobox } from "@/components/exercise-combobox"
 import { useAppStore } from "@/lib/store"
 import { TemplatesPanel, type LegoBlock } from "@/components/templates-panel"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,8 @@ type ExerciseRow = {
   id: string
   classification: Classification
   exercise: string
+  weight: string
+  unit: "kg" | "lb"
   sets: string
   reps: string
   rpe: string
@@ -30,13 +33,15 @@ type Day = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const COLS = ["classification", "exercise", "sets", "reps", "rpe", "rest"] as const
+const COLS = ["classification", "exercise", "weight", "unit", "sets", "reps", "rpe", "rest"] as const
 type ColKey = typeof COLS[number]
 
 const mkRow = (): ExerciseRow => ({
   id: Math.random().toString(36).slice(2),
   classification: "Principal",
   exercise: "",
+  weight: "",
+  unit: "kg",
   sets: "",
   reps: "",
   rpe: "",
@@ -313,6 +318,7 @@ export function BlockEditor() {
               addRow={addRow}
               deleteRow={deleteRow}
               duplicateDay={duplicateDay}
+              focusCell={focusCell}
               isDragOver={dropTargetDayId === day.id}
               onDragOver={(e) => {
                 if (!draggingLego) return
@@ -355,6 +361,7 @@ function DayTable({
   addRow,
   deleteRow,
   duplicateDay,
+  focusCell,
   isDragOver,
   onDragOver,
   onDragLeave,
@@ -367,6 +374,7 @@ function DayTable({
   addRow: (dayId: string, afterRowId?: string) => void
   deleteRow: (dayId: string, rowId: string) => void
   duplicateDay: (dayId: string) => void
+  focusCell: (dayId: string, rowId: string, col: ColKey) => void
   isDragOver: boolean
   onDragOver: (e: React.DragEvent) => void
   onDragLeave: () => void
@@ -412,20 +420,22 @@ function DayTable({
       {/* Table */}
       <table className="w-full table-fixed border-collapse text-xs">
         <colgroup>
-          <col className="w-24" />
-          <col className="w-auto" />
-          <col className="w-16" />
           <col className="w-20" />
+          <col className="w-auto" />
+          <col className="w-12" />
+          <col className="w-14" />
+          <col className="w-12" />
           <col className="w-16" />
-          <col className="w-24" />
+          <col className="w-12" />
+          <col className="w-20" />
           <col className="w-8" />
         </colgroup>
         <thead>
           <tr className="border-b border-border">
-            {["CLASIFICACIÓN", "EJERCICIO", "SERIES", "REPS", "RPE", "DESCANSO", ""].map((h) => (
+            {["CLASIFICACIÓN", "EJERCICIO", "PESO", "UNIDAD", "SERIES", "REPS", "RPE", "DESCANSO", ""].map((h) => (
               <th
                 key={h}
-                className="px-2 py-1 text-left text-[9px] font-bold uppercase tracking-widest text-muted-foreground"
+                className="px-1 py-1 text-left text-[9px] font-bold uppercase tracking-widest text-muted-foreground"
               >
                 {h}
               </th>
@@ -442,6 +452,7 @@ function DayTable({
               handleKeyDown={handleKeyDown}
               updateRow={updateRow}
               deleteRow={deleteRow}
+              focusCell={focusCell}
             />
           ))}
         </tbody>
@@ -469,6 +480,7 @@ function ExerciseRowComp({
   handleKeyDown,
   updateRow,
   deleteRow,
+  focusCell,
 }: {
   row: ExerciseRow
   dayId: string
@@ -476,6 +488,7 @@ function ExerciseRowComp({
   handleKeyDown: (dayId: string, rowId: string, col: ColKey) => (e: React.KeyboardEvent) => void
   updateRow: (dayId: string, rowId: string, patch: Partial<ExerciseRow>) => void
   deleteRow: (dayId: string, rowId: string) => void
+  focusCell: (dayId: string, rowId: string, col: ColKey) => void
 }) {
   const [hovered, setHovered] = useState(false)
 
@@ -510,9 +523,54 @@ function ExerciseRowComp({
           onChange={(v) => updateRow(dayId, row.id, { exercise: v })}
           onCreateCustom={(name) => updateRow(dayId, row.id, { exercise: name })}
           onTabNext={() => {
-            registerRef(dayId, row.id, "sets")
+            focusCell(dayId, row.id, "weight")
           }}
         />
+      </td>
+
+      {/* Weight */}
+      <td className="px-1 py-0.5">
+        <input
+          ref={registerRef(dayId, row.id, "weight")}
+          type="text"
+          inputMode="decimal"
+          placeholder="—"
+          value={row.weight}
+          onChange={(e) => updateRow(dayId, row.id, { weight: e.target.value })}
+          onKeyDown={handleKeyDown(dayId, row.id, "weight")}
+          className={cn(cellBase, "text-center w-12")}
+        />
+      </td>
+
+      {/* Unit Toggle */}
+      <td className="px-0.5 py-0.5">
+        <ToggleGroup
+          type="single"
+          value={row.unit}
+          onValueChange={(v) => {
+            if (v) updateRow(dayId, row.id, { unit: v as "kg" | "lb" })
+          }}
+          className="h-7"
+          onKeyDown={(e) => {
+            if (e.key === "Tab") {
+              e.preventDefault()
+              focusCell(dayId, row.id, "sets")
+            }
+          }}
+        >
+          <ToggleGroupItem
+            value="kg"
+            className="h-7 px-1.5 text-[10px] data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
+          >
+            kg
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="lb"
+            className="h-7 px-1.5 text-[10px] data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
+          >
+            lb
+          </ToggleGroupItem>
+        </ToggleGroup>
       </td>
 
       {/* Sets */}
