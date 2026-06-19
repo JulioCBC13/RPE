@@ -103,6 +103,31 @@ const INITIAL_FOLDERS: LegoFolder[] = [
       },
     ],
   },
+  {
+    id: "f4",
+    name: "Core",
+    blocks: [],
+  },
+  {
+    id: "f5",
+    name: "Cardio",
+    blocks: [],
+  },
+  {
+    id: "f6",
+    name: "Movilidad",
+    blocks: [],
+  },
+  {
+    id: "f7",
+    name: "Recuperación",
+    blocks: [],
+  },
+  {
+    id: "f8",
+    name: "Técnica",
+    blocks: [],
+  },
 ]
 
 // ─── New Lego Modal ───────────────────────────────────────────────────────────
@@ -118,7 +143,6 @@ function NewLegoModal({
 }) {
   const [name, setName] = useState("")
   const [folderId, setFolderId] = useState("")
-  const [newFolderName, setNewFolderName] = useState("")
   const [exercises, setExercises] = useState<LegoExercise[]>([
     { id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" },
   ])
@@ -135,11 +159,11 @@ function NewLegoModal({
 
   const handleSave = () => {
     if (!name.trim()) return
-    const targetFolder = newFolderName.trim() ? `__new__${newFolderName.trim()}` : folderId
+    // If folderId is empty (""), create in a default folder or root
+    const targetFolder = folderId || "__root__"
     onSave(name.trim(), targetFolder, exercises.filter((e) => e.exercise.trim()))
     setName("")
     setFolderId("")
-    setNewFolderName("")
     setExercises([{ id: Math.random().toString(36).slice(2), exercise: "", sets: "", reps: "" }])
     onClose()
   }
@@ -175,25 +199,17 @@ function NewLegoModal({
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Carpeta
             </label>
-            <div className="flex gap-2">
-              <select
-                value={folderId}
-                onChange={(e) => setFolderId(e.target.value)}
-                className="h-7 flex-1 rounded border border-border bg-muted/40 px-2 text-xs text-card-foreground focus:border-primary focus:outline-none"
-              >
-                <option value="">Seleccionar carpeta...</option>
-                {folders.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-              <span className="flex items-center text-[10px] text-muted-foreground">o</span>
-              <input
-                className="h-7 flex-1 rounded border border-border bg-muted/40 px-2 text-xs text-card-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
-                placeholder="Nueva carpeta..."
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-              />
-            </div>
+            <select
+              value={folderId}
+              onChange={(e) => setFolderId(e.target.value)}
+              className="h-40 flex-1 rounded border border-border bg-muted/40 px-2 py-1 text-xs text-card-foreground focus:border-primary focus:outline-none overflow-y-auto"
+            >
+              <option value="" className="bg-primary/20 text-primary font-semibold py-1">Crear una carpeta</option>
+              <option value="">Seleccionar carpeta...</option>
+              {folders.map((f) => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Exercises table */}
