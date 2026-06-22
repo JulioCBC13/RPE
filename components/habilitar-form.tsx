@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
 import { CalendarClock } from "lucide-react"
+import { useAppStore } from "@/lib/store"
 
 const durations = [
   { value: "1", label: "1 mes" },
@@ -18,6 +19,7 @@ const durations = [
 
 export function HabilitarForm({ athleteId }: { athleteId: string }) {
   const router = useRouter()
+  const { athletes, setAthleteStatus } = useAppStore()
   const [duration, setDuration] = useState<string>("1")
   const [linkTemplate, setLinkTemplate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -32,6 +34,13 @@ export function HabilitarForm({ athleteId }: { athleteId: string }) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
+    
+    // Update athlete status in store if it's a new athlete
+    const athlete = athletes.find((a) => a.id === athleteId)
+    if (athlete && athlete.status === "sin_acceso") {
+      setAthleteStatus(athleteId, "activo")
+    }
+    
     router.push(`/atletas/${athleteId}`)
   }
 

@@ -30,6 +30,8 @@ type AppStore = {
   assignBlock: (athleteId: string, block: ActiveBlock) => void
   // Add a new athlete to the store
   addAthlete: (athlete: Omit<StoreAthlete, "id" | "block">) => string
+  // Set athlete status (for enabling access)
+  setAthleteStatus: (athleteId: string, status: AthleteStatus) => void
   // Sidebar collapsed state
   sidebarCollapsed: boolean
   setSidebarCollapsed: (v: boolean) => void
@@ -100,9 +102,15 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     return newId
   }
 
+  const setAthleteStatus = (athleteId: string, status: AthleteStatus) => {
+    setAthletes((prev) =>
+      prev.map((a) => (a.id === athleteId ? { ...a, status } : a)),
+    )
+  }
+
   return (
     <StoreContext.Provider
-      value={{ athletes, pendingAthleteId, setPendingAthleteId, assignBlock, addAthlete, sidebarCollapsed, setSidebarCollapsed }}
+      value={{ athletes, pendingAthleteId, setPendingAthleteId, assignBlock, addAthlete, setAthleteStatus, sidebarCollapsed, setSidebarCollapsed }}
     >
       {children}
     </StoreContext.Provider>
