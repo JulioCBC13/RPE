@@ -90,6 +90,7 @@ export default function AthleteProfilePage() {
   const alerts = getAlertsForAthlete(athlete.id)
   const sessions = getSessionsForAthlete(athlete.id)
   const actionLabel = athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"
+  const storeAthlete = storeAthletes.find((a) => a.id === athlete.id)
 
   return (
     <AppShell title="Perfil de atleta">
@@ -120,14 +121,16 @@ export default function AthleteProfilePage() {
               </div>
             </div>
 
-            <Button
-              size="sm"
-              className="w-fit"
-              nativeButton={false}
-              render={<Link href={`/atletas/${athlete.id}/habilitar`} />}
-            >
-              {actionLabel} acceso
-            </Button>
+            {athlete.status !== "activo" && (
+              <Button
+                size="sm"
+                className="w-fit"
+                nativeButton={false}
+                render={<Link href={`/atletas/${athlete.id}/habilitar`} />}
+              >
+                {actionLabel} acceso
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -136,7 +139,7 @@ export default function AthleteProfilePage() {
             entries={athleteWeightProgress[athlete.id] || []}
             athleteName={athlete.name}
           />
-          <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} />
+          <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} storeBlock={storeAthlete?.block} />
         </section>
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">

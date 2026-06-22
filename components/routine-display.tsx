@@ -4,18 +4,18 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Zap } from "lucide-react"
-import { useAppStore } from "@/lib/store"
+import { useAppStore, type ActiveBlock } from "@/lib/store"
 import type { Routine } from "@/lib/data"
 
 interface RoutineDisplayProps {
   routine: Routine | undefined
   athleteId?: string
+  storeBlock?: ActiveBlock | null
 }
 
-export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
+export function RoutineDisplay({ routine, athleteId, storeBlock }: RoutineDisplayProps) {
   const router = useRouter()
   const { setPendingAthleteId } = useAppStore()
 
@@ -26,6 +26,33 @@ export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
     router.push("/programacion/crear")
   }
 
+  // If there is a block in the store, show simplified information
+  if (storeBlock?.name) {
+    return (
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle className="text-base">Rutina Actual</CardTitle>
+            <CardDescription className="text-xs mt-0.5">{storeBlock.name}</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Duración:</span>
+              <Badge variant="outline">{storeBlock.weeks} semanas</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Creado:</span>
+              <span className="text-sm font-medium">{new Date(storeBlock.createdAt).toLocaleDateString("es-ES")}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // If there's no block in store nor static routine
   if (!routine) {
     return (
       <Card>
@@ -34,10 +61,7 @@ export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4 py-6 text-center">
           <p className="text-sm text-muted-foreground">Sin rutina asignada para este atleta.</p>
-          <Button 
-            onClick={handleCreateRoutine}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={handleCreateRoutine} className="flex items-center gap-2">
             <Zap className="size-4" />
             Crear Rutina
           </Button>
@@ -46,6 +70,7 @@ export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
     )
   }
 
+  // Show static routine
   return (
     <Card>
       <CardHeader>
@@ -72,9 +97,7 @@ export function RoutineDisplay({ routine, athleteId }: RoutineDisplayProps) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <h4 className="font-semibold text-card-foreground text-sm">{exercise.name}</h4>
-                        {exercise.notes && (
-                          <p className="text-xs text-muted-foreground mt-1 italic">{exercise.notes}</p>
-                        )}
+                        {exercise.notes && <p className="text-xs text-muted-foreground mt-1 italic">{exercise.notes}</p>}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">

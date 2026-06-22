@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
 import { ArrowLeft, CalendarClock, History } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { AlertCard } from "@/components/alert-card"
@@ -20,42 +19,15 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import { useAppStore } from "@/lib/store"
-import { getAlertsForAthlete, getSessionsForAthlete, initialsOf, athleteWeightProgress, athleteRoutines } from "@/lib/data"
-
-interface AthleteProfile {
-  id: string
-  name: string
-  email: string
-  status: "activo" | "expirado" | "sin_acceso"
-}
+import { getAlertsForAthlete, getSessionsForAthlete, initialsOf, athleteWeightProgress, athleteRoutines, getAthlete } from "@/lib/data"
 
 export function AthleteProfileClient({ athleteId }: { athleteId: string }) {
   const { athletes: storeAthletes } = useAppStore()
-  const [athlete, setAthlete] = useState<AthleteProfile | null>(null)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const found = storeAthletes.find((a) => a.id === athleteId)
-    if (found) {
-      setAthlete({
-        id: found.id,
-        name: found.name,
-        email: found.email,
-        status: found.status,
-      })
-    }
-    setLoading(false)
-  }, [athleteId, storeAthletes])
-
-  if (loading) {
-    return (
-      <AppShell title="Perfil de atleta">
-        <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Cargando...</p>
-        </div>
-      </AppShell>
-    )
-  }
+  // Search first in store (new or modified athletes), then fallback to static data
+  const storeAthlete = storeAthletes.find((a) => a.id === athleteId)
+  const staticAthlete = getAthlete(athleteId)
+  const athlete = storeAthlete || staticAthlete
 
   if (!athlete) {
     return (
@@ -72,7 +44,6 @@ export function AthleteProfileClient({ athleteId }: { athleteId: string }) {
 
   const alerts = getAlertsForAthlete(athlete.id)
   const sessions = getSessionsForAthlete(athlete.id)
-  const actionLabel = athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"
 
   return (
     <AppShell title="Perfil de atleta">
@@ -96,20 +67,22 @@ export function AthleteProfileClient({ athleteId }: { athleteId: string }) {
               </div>
             </div>
 
-            <Button
-              size="sm"
-              className="w-fit"
-              nativeButton={false}
-              render={<Link href={`/atletas/${athlete.id}/habilitar`} />}
-            >
-              {actionLabel} acceso
-            </Button>
+            {athlete.status !== "activo" && (
+              <Button
+                size="sm"
+                className="w-fit"
+                nativeButton={false}
+                render={<Link href={`/atletas/${athlete.id}/habilitar`} />}
+              >
+                {athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"} acceso
+              </Button>
+            )}
           </CardContent>
         </Card>
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <WeightProgressChart entries={athleteWeightProgress[athlete.id] || []} athleteName={athlete.name} />
-          <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} />
+          <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} storeBlock={storeAthlete?.block} />
         </section>
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
