@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, CalendarClock, History, Clock, Bell } from "lucide-react"
+import { ArrowLeft, CalendarClock, History } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { AlertCard } from "@/components/alert-card"
 import { WeightProgressChart } from "@/components/weight-progress-chart"
@@ -11,8 +11,7 @@ import { WeightProgressTable } from "@/components/weight-progress-table"
 import { RoutineDisplay } from "@/components/routine-display"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Empty,
   EmptyHeader,
@@ -20,19 +19,16 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty"
-import type { CoachAlert } from "@/lib/data"
 import { useAppStore, type StoreAthlete } from "@/lib/store"
 import {
   getAthlete,
   getAlertsForAthlete,
   getSessionsForAthlete,
   initialsOf,
-  timeAgo,
   athleteWeightProgress,
   athleteRoutines,
 } from "@/lib/data"
 import { SessionRow } from "@/components/session-row"
-import { AlertTypeChip } from "@/components/chips"
 
 export default function AthleteProfilePage() {
   const params = useParams()
@@ -41,15 +37,12 @@ export default function AthleteProfilePage() {
   const { athletes: storeAthletes } = useAppStore()
   const [athlete, setAthlete] = useState<StoreAthlete | null>(null)
   const [notFound, setNotFound] = useState(false)
-  const [activeAlerts, setActiveAlerts] = useState<CoachAlert[]>([])
-  const [reviewedHistory, setReviewedHistory] = useState<CoachAlert[]>([])
 
   useEffect(() => {
     // 1. Check store first (covers s1-s4, created-*, and any newly added athlete)
     const fromStore = storeAthletes.find((a) => a.id === id)
     if (fromStore) {
       setAthlete(fromStore)
-      setActiveAlerts(getAlertsForAthlete(fromStore.id).filter((a) => !a.reviewed))
       return
     }
 
@@ -63,20 +56,11 @@ export default function AthleteProfilePage() {
         status: fromStatic.status as StoreAthlete["status"],
         block: null,
       })
-      setActiveAlerts(getAlertsForAthlete(fromStatic.id).filter((a) => !a.reviewed))
       return
     }
 
     setNotFound(true)
   }, [id, storeAthletes])
-
-  function handleAlertReviewed(alert: CoachAlert) {
-    setActiveAlerts((prev) => prev.filter((a) => a.id !== alert.id))
-    setReviewedHistory((prev) => {
-      const next = [{ ...alert, reviewed: true }, ...prev]
-      return next.slice(0, 20) // keep last 20
-    })
-  }
 
   if (notFound) {
     return (
@@ -102,6 +86,7 @@ export default function AthleteProfilePage() {
     )
   }
 
+  const alerts = getAlertsForAthlete(athlete.id)
   const sessions = getSessionsForAthlete(athlete.id)
   const actionLabel = athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"
   const storeAthlete = storeAthletes.find((a) => a.id === athlete.id)
@@ -153,7 +138,11 @@ export default function AthleteProfilePage() {
             entries={athleteWeightProgress[athlete.id] || []}
             athleteName={athlete.name}
           />
-          <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} storeBlock={storeAthlete?.block} />
+          <RoutineDisplay
+            routine={athleteRoutines[athlete.id]}
+            athleteId={athlete.id}
+            storeBlock={storeAthlete?.block}
+          />
         </section>
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
@@ -202,63 +191,14 @@ export default function AthleteProfilePage() {
           </div>
         </section>
 
-        {(activeAlerts.length > 0 || reviewedHistory.length > 0) && (
-          <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_280px]">
-            {/* Alertas activas */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <Bell className="size-4 text-card-foreground" />
-                <h3 className="text-sm font-bold text-card-foreground">Alertas de Rendimiento</h3>
-                {activeAlerts.length > 0 && (
-                  <Badge variant="destructive" className="text-xs">
-                    {activeAlerts.length}
-                  </Badge>
-                )}
-              </div>
-              {activeAlerts.length === 0 ? (
-                <Card>
-                  <CardContent className="flex items-center justify-center py-8">
-                    <p className="text-sm text-muted-foreground">Sin alertas pendientes.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {activeAlerts.map((alert) => (
-                    <AlertCard key={alert.id} alert={alert} compact onReviewed={handleAlertReviewed} />
-                  ))}
-                </div>
-              )}
+        {alerts.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <h3 className="text-sm font-bold text-card-foreground">Alertas</h3>
+            <div className="flex flex-col gap-2">
+              {alerts.map((alert, i) => (
+                <AlertCard key={i} alert={alert} />
+              ))}
             </div>
-
-            {/* Mini historial de revisadas */}
-            <Card className="h-fit">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Clock className="size-4" />
-                  Historial
-                </CardTitle>
-                <CardDescription className="text-xs">Últimas {Math.min(reviewedHistory.length, 20)} revisadas</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                {reviewedHistory.length === 0 ? (
-                  <p className="px-4 pb-4 text-xs text-muted-foreground">
-                    Las alertas marcadas como revisadas aparecerán aquí.
-                  </p>
-                ) : (
-                  <div className="flex flex-col divide-y divide-border">
-                    {reviewedHistory.map((alert) => (
-                      <div key={alert.id} className="flex flex-col gap-1 px-4 py-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <AlertTypeChip type={alert.type} />
-                          <span className="text-xs text-muted-foreground">{timeAgo(alert.createdAt)}</span>
-                        </div>
-                        <p className="line-clamp-2 text-xs text-muted-foreground">{alert.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </section>
         )}
       </div>

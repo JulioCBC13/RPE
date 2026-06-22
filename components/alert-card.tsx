@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import type { CoachAlert } from "@/lib/data"
-import { timeAgo, formatDate, initialsOf } from "@/lib/data"
+import { formatDate, initialsOf } from "@/lib/data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { AlertTypeChip } from "@/components/chips"
@@ -11,18 +11,12 @@ import { Check, ExternalLink } from "lucide-react"
 
 export function AlertCard({
   alert,
-  compact = false,
   onReviewed,
 }: {
   alert: CoachAlert
-  compact?: boolean
   onReviewed?: (alert: CoachAlert) => void
 }) {
   const isRed = alert.type === "ESTANCAMIENTO"
-
-  function handleReview() {
-    onReviewed?.(alert)
-  }
 
   return (
     <div
@@ -33,24 +27,20 @@ export function AlertCard({
       )}
     >
       <div className="flex gap-3">
-        {!compact && (
-          <Avatar className="size-9 shrink-0">
-            <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-              {initialsOf(alert.athleteName)}
-            </AvatarFallback>
-          </Avatar>
-        )}
+        <Avatar className="size-9 shrink-0">
+          <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+            {initialsOf(alert.athleteName)}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            {!compact && (
-              <Link
-                href={`/atletas/${alert.athleteId}`}
-                className="flex items-center gap-1 text-sm font-semibold text-card-foreground hover:underline"
-              >
-                {alert.athleteName}
-                <ExternalLink className="size-3 text-muted-foreground" />
-              </Link>
-            )}
+            <Link
+              href={`/atletas/${alert.athleteId}`}
+              className="flex items-center gap-1 text-sm font-semibold text-card-foreground hover:underline"
+            >
+              {alert.athleteName}
+              <ExternalLink className="size-3 text-muted-foreground" />
+            </Link>
             <AlertTypeChip type={alert.type} />
             <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               Semana {alert.week}
@@ -61,11 +51,9 @@ export function AlertCard({
       </div>
 
       <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end">
-        <span className="text-xs text-muted-foreground">
-          {compact ? timeAgo(alert.createdAt) : formatDate(alert.createdAt)}
-        </span>
+        <span className="text-xs text-muted-foreground">{formatDate(alert.createdAt)}</span>
         {onReviewed && (
-          <Button variant="outline" size="sm" onClick={handleReview}>
+          <Button variant="outline" size="sm" onClick={() => onReviewed(alert)}>
             <Check data-icon="inline-start" />
             Marcar revisada
           </Button>
