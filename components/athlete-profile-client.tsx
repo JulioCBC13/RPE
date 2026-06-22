@@ -96,7 +96,12 @@ export function AthleteProfileClient({ athleteId }: { athleteId: string }) {
               </div>
             </div>
 
-            <Button size="sm" className="w-fit">
+            <Button
+              size="sm"
+              className="w-fit"
+              nativeButton={false}
+              render={<Link href={`/atletas/${athlete.id}/habilitar`} />}
+            >
               {actionLabel} acceso
             </Button>
           </CardContent>

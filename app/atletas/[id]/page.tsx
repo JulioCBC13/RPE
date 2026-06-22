@@ -1,9 +1,11 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { notFound } from "next/navigation"
 import { ArrowLeft, CalendarClock, History } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { AlertCard } from "@/components/alert-card"
-import { SessionRow } from "@/components/session-row"
 import { WeightProgressChart } from "@/components/weight-progress-chart"
 import { WeightProgressTable } from "@/components/weight-progress-table"
 import { RoutineDisplay } from "@/components/routine-display"
@@ -17,45 +19,93 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty"
+import { useAppStore, type StoreAthlete } from "@/lib/store"
 import {
   getAthlete,
   getAlertsForAthlete,
   getSessionsForAthlete,
-  formatDate,
   initialsOf,
   athleteWeightProgress,
   athleteRoutines,
+  athletes as staticAthletes,
 } from "@/lib/data"
-import { AthleteProfileClient } from "@/components/athlete-profile-client"
+import { SessionRow } from "@/components/session-row"
 
-export default async function AthleteProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  
-  // Try static data first
-  const athlete = getAthlete(id)
-  
-  // If not found and ID is dynamic (created at runtime), use client component to look in store
-  if (!athlete && id.startsWith("created-")) {
-    return <AthleteProfileClient athleteId={id} />
+export default function AthleteProfilePage() {
+  const params = useParams()
+  const router = useRouter()
+  const id = params.id as string
+  const { athletes: storeAthletes } = useAppStore()
+  const [athlete, setAthlete] = useState<StoreAthlete | null>(null)
+  const [notFound, setNotFound] = useState(false)
+
+  useEffect(() => {
+    // 1. Check store first (covers s1-s4, created-*, and any newly added athlete)
+    const fromStore = storeAthletes.find((a) => a.id === id)
+    if (fromStore) {
+      setAthlete(fromStore)
+      return
+    }
+
+    // 2. Fallback: static data (a1-a6), mapped to StoreAthlete shape
+    const fromStatic = getAthlete(id)
+    if (fromStatic) {
+      setAthlete({
+        id: fromStatic.id,
+        name: fromStatic.name,
+        email: fromStatic.email,
+        status: fromStatic.status as StoreAthlete["status"],
+        block: null,
+      })
+      return
+    }
+
+    setNotFound(true)
+  }, [id, storeAthletes])
+
+  if (notFound) {
+    return (
+      <AppShell title="Perfil de atleta">
+        <div className="flex flex-col items-center gap-4 py-16">
+          <p className="text-lg text-muted-foreground">Atleta no encontrado</p>
+          <Button nativeButton={false} render={<Link href="/atletas" />}>
+            Volver a atletas
+          </Button>
+        </div>
+      </AppShell>
+    )
   }
-  
-  // If not found at all
+
   if (!athlete) {
-    notFound()
+    return (
+      <AppShell title="Perfil de atleta">
+        <div className="flex flex-col gap-4 p-6">
+          <div className="h-24 animate-pulse rounded-lg bg-muted" />
+          <div className="h-48 animate-pulse rounded-lg bg-muted" />
+        </div>
+      </AppShell>
+    )
   }
 
-  const alerts = getAlertsForAthlete(id)
-  const sessions = getSessionsForAthlete(id)
+  const alerts = getAlertsForAthlete(athlete.id)
+  const sessions = getSessionsForAthlete(athlete.id)
   const actionLabel = athlete.status === "sin_acceso" ? "Habilitar" : "Renovar"
 
   return (
     <AppShell title="Perfil de atleta">
       <div className="flex flex-col gap-6">
-        <Button variant="ghost" size="sm" className="w-fit" nativeButton={false} render={<Link href="/atletas" />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          nativeButton={false}
+          render={<Link href="/atletas" />}
+        >
           <ArrowLeft data-icon="inline-start" />
           Volver a atletas
         </Button>
 
+        {/* Header card */}
         <Card>
           <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -70,18 +120,26 @@ export default async function AthleteProfilePage({ params }: { params: Promise<{
               </div>
             </div>
 
-            <Button size="sm" className="w-fit">
+            <Button
+              size="sm"
+              className="w-fit"
+              nativeButton={false}
+              render={<Link href={`/atletas/${athlete.id}/habilitar`} />}
+            >
               {actionLabel} acceso
             </Button>
           </CardContent>
         </Card>
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <WeightProgressChart entries={athleteWeightProgress[athlete.id] || []} athleteName={athlete.name} />
+          <WeightProgressChart
+            entries={athleteWeightProgress[athlete.id] || []}
+            athleteName={athlete.name}
+          />
           <RoutineDisplay routine={athleteRoutines[athlete.id]} athleteId={athlete.id} />
         </section>
 
-        <section className="grid grid-cols-1 gap-5">
+        <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
           <div className="flex flex-col gap-5">
             <Card>
               <CardHeader>
@@ -92,6 +150,36 @@ export default async function AthleteProfilePage({ params }: { params: Promise<{
               </CardHeader>
               <CardContent>
                 <WeightProgressTable entries={athleteWeightProgress[athlete.id] || []} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CalendarClock className="size-4" />
+                  Sesiones recientes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sessions.length === 0 ? (
+                  <Empty>
+                    <EmptyMedia>
+                      <CalendarClock className="size-8 text-muted-foreground" />
+                    </EmptyMedia>
+                    <EmptyHeader>
+                      <EmptyTitle>Sin sesiones</EmptyTitle>
+                      <EmptyDescription>Asigna una rutina a este atleta</EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {sessions.map((session, i) => (
+                      <SessionRow key={i} session={session} />
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
