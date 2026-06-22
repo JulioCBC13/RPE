@@ -301,6 +301,21 @@ export function BlockEditor() {
                 name: blockName.trim(),
                 weeks: Number(weeks),
                 createdAt: new Date().toISOString().split("T")[0],
+                days: days.map((d) => ({
+                  label: d.label,
+                  exercises: d.rows
+                    .filter((r) => r.exercise.trim())
+                    .map((r) => ({
+                      name: r.exercise,
+                      sets: r.sets,
+                      reps: r.reps,
+                      weight: r.weight,
+                      unit: r.unit,
+                      rpe: r.rpe,
+                      rest: r.rest,
+                      classification: r.classification,
+                    })),
+                })),
               })
               setPublished(true)
             }}

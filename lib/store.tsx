@@ -6,10 +6,27 @@ import { createContext, useContext, useState, type ReactNode } from "react"
 
 export type AthleteStatus = "activo" | "expirado" | "sin_acceso"
 
+export type ActiveBlockExercise = {
+  name: string
+  sets: string
+  reps: string
+  weight?: string
+  unit?: "kg" | "lb"
+  rpe?: string
+  rest?: string
+  classification?: "Principal" | "Accesorio"
+}
+
+export type ActiveBlockDay = {
+  label: string
+  exercises: ActiveBlockExercise[]
+}
+
 export type ActiveBlock = {
   name: string
   weeks: number
   createdAt: string
+  days?: ActiveBlockDay[]
 }
 
 export type StoreAthlete = {

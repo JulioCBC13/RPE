@@ -3,6 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Scale } from "lucide-react"
 import type { WeightEntry } from "@/lib/data"
 
 interface WeightProgressChartProps {
@@ -12,7 +13,20 @@ interface WeightProgressChartProps {
 
 export function WeightProgressChart({ entries, athleteName }: WeightProgressChartProps) {
   if (entries.length === 0) {
-    return null
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Progreso de Peso</CardTitle>
+          <CardDescription className="text-xs mt-0.5">
+            Seguimiento del peso corporal de {athleteName}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
+          <Scale className="size-8 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">Sin registros de peso aún.</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   const chartData = entries.map((e) => ({
